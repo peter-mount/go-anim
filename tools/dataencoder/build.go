@@ -55,6 +55,10 @@ func (a Arch) Lib(builds, lib string) string {
 	return filepath.Join(a.BaseDir(builds), "lib", lib)
 }
 
+func (a Arch) Include(builds, include string) string {
+	return filepath.Join(a.BaseDir(builds), include)
+}
+
 func (s *Build) Start() error {
 	if *s.Dest != "" {
 		arch, err := s.getDist()
@@ -224,6 +228,7 @@ func (s *Build) generate(tools []string, arches []Arch) error {
 		//libList, archListTargets = s.build(libList, archListTargets, arch, "bsc5.bin", "-bsc5", "data/bsc5.dat.gz")
 		//libList, archListTargets = s.build(libList, archListTargets, arch, "vsop87b", "-vsop87", "data")
 		//libList, archListTargets = s.build(libList, archListTargets, arch, "web", "-web", "web")
+		libList, archListTargets = s.build(libList, archListTargets, arch, arch.Include, "include", "-include", "include")
 
 		// Do archList last
 		archList = append(archList, arch.Target()+": "+strings.Join(archListTargets, " "))
@@ -242,8 +247,8 @@ func (s *Build) generate(tools []string, arches []Arch) error {
 	return os.WriteFile(*s.Dest, []byte(strings.Join(a, "\n")), 0644)
 }
 
-func (s *Build) build(libList, archListTargets []string, arch Arch, lib string, args ...string) ([]string, []string) {
-	dest := arch.Lib(*s.Encoder.Dest, lib)
+func (s *Build) build(libList, archListTargets []string, arch Arch, f func(builds, lib string) string, lib string, args ...string) ([]string, []string) {
+	dest := f(*s.Encoder.Dest, lib)
 	libList = append(libList,
 		"",
 		dest+":",
