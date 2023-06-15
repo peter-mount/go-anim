@@ -2,11 +2,7 @@
 # SMPTE Test Card
 #
 
-main() {
-    println( "Test Card: SMPTE" )
-
-    ctx := animGraphic.NewContext(0,5*30,30,5*30)
-
+testCardSMPTE(ctx) {
     black := colour.Colour("black")
     white := colour.Colour("white")
 
@@ -59,8 +55,16 @@ main() {
         )
     }
 
+}
+
+main() {
+    println( "Test Card: SMPTE" )
+
+    ctx := animGraphic.NewContext(0,5*30,30,5*30)
+
+    testCardSMPTE(ctx)
+
     try( f:=os.Create("/home/peter/test.png") ) {
         image.WritePNG(f,ctx.Image())
     }
-
 }
