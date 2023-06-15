@@ -1,6 +1,7 @@
 package color
 
 import (
+	"fmt"
 	"image/color"
 )
 
@@ -8,19 +9,30 @@ func Gradient(n int, from, to color.Color) []color.Color {
 	fr, fg, fb, fa := from.RGBA()
 	tr, tg, tb, ta := to.RGBA()
 	dr, dg, db, da := diff(fr, tr, n), diff(fg, tg, n), diff(fb, tb, n), diff(fa, ta, n)
+	cr, cg, cb, ca := int32(fr), int32(fg), int32(fb), int32(fa)
 
 	var r []color.Color
 	r = append(r, from)
 	for i := 2; i < n; i++ {
-		fr, fg, fb, fa = fr+dr, fg+dg, fb+db, fa+da
-		r = append(r, color.RGBA{R: uint8(fr >> 8), G: uint8(fg >> 8), B: uint8(fb >> 8), A: uint8(fa >> 8)})
+		cr, cg, cb, ca = cr+dr, cg+dg, cb+db, ca+da
+		r = append(r, color.RGBA{R: uint8(cr >> 8), G: uint8(cg >> 8), B: uint8(cb >> 8), A: uint8(ca >> 8)})
 	}
-	return append(r, to)
+
+	r = append(r, to)
+	fmt.Printf("Frm %8d %8d %8d %8d\n", fr, fg, fb, fa)
+	fmt.Printf(" To %8d %8d %8d %8d\n", tr, tg, tb, ta)
+	for i, c := range r {
+		r, g, b, a := c.RGBA()
+		fmt.Printf("%3d %8d %8d %8d %8d\n", i, r, g, b, a)
+	}
+
+	return r
+	//return
 }
 
-func diff(f, t uint32, n int) uint32 {
-	if t < f {
+func diff(f, t uint32, n int) int32 {
+	/*if t < f {
 		f, t = t, f
-	}
-	return (t - f) / uint32(n)
+	}*/
+	return (int32(t) - int32(f)) / int32(n-1)
 }

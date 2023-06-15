@@ -21,7 +21,7 @@ func CloneContext(ctx Context) Context {
 		}
 
 		// Copy the image as-is
-		n.img = graph.DuplicateImage(c.Img())
+		n.img = graph.DuplicateImage(c.Image())
 
 		n.gc = draw2dimg.NewGraphicContext(n.img)
 

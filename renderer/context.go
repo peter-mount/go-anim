@@ -7,8 +7,9 @@ import (
 )
 
 type Context interface {
-	// Img The underlying image
-	Img() draw.Image
+	Image() draw.Image
+	SetImage(draw.Image) Context
+	NewImage() Context
 	// Width of the image
 	Width() int
 	// Height of the image
@@ -40,8 +41,9 @@ type Context interface {
 	Set(string, any) Context
 	// Remove removes a key from the user object storage
 	Remove(k string) Context
-	// Render will call a Renderer with a clean instance of the context
-	Render(Renderer) error
 	// HasNext true if there's more frames in the Context
 	HasNext() bool
+	Create() error
+	Close() error
+	Reset() Context
 }

@@ -11,16 +11,14 @@ import (
 // start,end are the frame range to cover, frameRate the frame rate of the track
 // whilst duration is the total duration of the track in frames
 func NewContext(start, end int, frameRate, duration float64) Context {
-	return &context{
+	ctx := &context{
 		start:     start,
 		end:       end,
 		nextFrame: start,
 		frameRate: frameRate,
 		duration:  duration,
-		width:     util.Width4K,
-		height:    util.Height4K,
-		img:       image.NewRGBA(image.Rect(0, 0, util.Width4K, util.Height4K)),
 	}
+	return ctx.NewImage()
 }
 
 type context struct {
@@ -41,8 +39,26 @@ func (c *context) HasNext() bool {
 	return c.nextFrame <= c.end
 }
 
-func (c *context) Img() draw.Image {
+func (c *context) Image() draw.Image {
 	return c.img
+}
+
+func (c *context) SetImage(img draw.Image) Context {
+	c.img = img
+	b := img.Bounds()
+	c.width = b.Dx()
+	c.height = b.Dy()
+	return c.Reset()
+}
+
+func (c *context) NewImage() Context {
+	if c.width == 0 {
+		c.width = util.Width4K
+	}
+	if c.height == 0 {
+		c.height = util.Height4K
+	}
+	return c.SetImage(image.NewRGBA(image.Rect(0, 0, c.width, c.height)))
 }
 
 func (c *context) Width() int {
@@ -107,23 +123,22 @@ func (c *context) Remove(k string) Context {
 	return c
 }
 
-func (c *context) Render(r Renderer) error {
-	for c.nextFrame <= c.end {
-		c.curFrame = c.nextFrame
-		c.nextFrame++
-
-		// Reset the Context state
-		c.gc = draw2dimg.NewGraphicContext(c.img)
-
-		// TODO check its ok not to clear the userdata each frame
-		if c.userdata == nil {
-			c.userdata = make(map[string]interface{})
-		}
-
-		if err := r.Do(c); err != nil {
-			return err
-		}
-	}
-
+// Create from CreateCloser interface, used in try resources block
+// to save and close state in the context
+func (c *context) Create() error {
+	c.Gc().Save()
 	return nil
+}
+
+// Close from CreateCloser interface, used in try resources block
+// to save and close state in the context
+func (c *context) Close() error {
+	c.Gc().Close()
+	return nil
+}
+
+func (c *context) Reset() Context {
+	// Reset the Context state
+	c.gc = draw2dimg.NewGraphicContext(c.img)
+	return c
 }

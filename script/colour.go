@@ -15,10 +15,10 @@ func (_ Colour) ColourString(c color.Color) string {
 	return color2.ColourString(c)
 }
 
-func (_ Colour) ParseColour(hex string) (color.RGBA, error) {
+func (_ Colour) Colour(hex string) (color.RGBA, error) {
 	return color2.ParseColour(hex)
 }
 
-func (_ Colour) ColourGradient(n int, from, to color.Color) []color.Color {
+func (_ Colour) Gradient(n int, from, to color.Color) []color.Color {
 	return color2.Gradient(n, from, to)
 }
