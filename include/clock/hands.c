@@ -3,7 +3,8 @@ clockSecondHand(ctx, cx, cy, radius, smooth, sec ) {
     radius = radius - 60
     radiusInner := radius / 2.0
 
-    if smooth { sec = math.Floor(sec) }
+    // If not in smooth mode then keep hands snapped at the exact second
+    if !smooth { sec = math.Floor(sec) }
 
     try( ctx ) {
         sc := math.Sincos( math.Rad(360.0*(45-sec)/60.0) )

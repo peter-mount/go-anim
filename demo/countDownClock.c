@@ -39,5 +39,9 @@ demoCountdown(ctx, sec) {
     clockDialBackground(ctx, 1920, 1080, 540, colour.Colour("#000000"))
     clockDialForeground(ctx, 1920, 1080, 540, colour.Colour("#ffffff"))
     countdownClockFace(ctx, 1920, 1080, 540)
-    clockSecondHand(ctx, 1920, 1080, 540, false, sec)
+    // Change true here to false to have the hand's move on each second
+    // rather than smooth.
+    //
+    // However look at the other demo on a way to do that even faster
+    clockSecondHand(ctx, 1920, 1080, 540, true, sec)
 }
