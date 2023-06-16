@@ -24,6 +24,18 @@ func (_ Graph) ParseFont(s string) (font.Font, error) {
 	return font.ParseFont(s)
 }
 
+func (_ Graph) SetFont(gc *draw2dimg.GraphicContext, s string) error {
+	f, err := font.ParseFont(s)
+	if err != nil {
+		return err
+	}
+
+	fd := f.FontData()
+	gc.SetFontData(fd)
+	gc.SetFontSize(gc.Current.FontSize)
+	return nil
+}
+
 func (_ Graph) FillPoly(gc *draw2dimg.GraphicContext, c color.Color, v ...float64) {
 	draw2d2.FillPoly(gc, c, v...)
 }

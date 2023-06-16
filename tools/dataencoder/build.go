@@ -52,7 +52,7 @@ func (a Arch) Tool(builds, tool string) string {
 }
 
 func (a Arch) Lib(builds, lib string) string {
-	return filepath.Join(a.BaseDir(builds), "lib", lib)
+	return filepath.Join(a.BaseDir(builds), lib)
 }
 
 func (a Arch) Include(builds, include string) string {
@@ -225,9 +225,7 @@ func (s *Build) generate(tools []string, arches []Arch) error {
 		}
 
 		// Rules for lib files
-		//libList, archListTargets = s.build(libList, archListTargets, arch, "bsc5.bin", "-bsc5", "data/bsc5.dat.gz")
-		//libList, archListTargets = s.build(libList, archListTargets, arch, "vsop87b", "-vsop87", "data")
-		//libList, archListTargets = s.build(libList, archListTargets, arch, "web", "-web", "web")
+		libList, archListTargets = s.build(libList, archListTargets, arch, arch.Lib, "lib", "-lib", "lib")
 		libList, archListTargets = s.build(libList, archListTargets, arch, arch.Include, "include", "-include", "include")
 
 		// Do archList last
