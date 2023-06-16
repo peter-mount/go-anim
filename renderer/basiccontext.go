@@ -133,7 +133,7 @@ func (c *context) Create() error {
 // Close from CreateCloser interface, used in try resources block
 // to save and close state in the context
 func (c *context) Close() error {
-	c.Gc().Close()
+	c.Gc().Restore()
 	return nil
 }
 
