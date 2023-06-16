@@ -91,7 +91,7 @@ testCardBBCUnknown(ctx) {
 main() {
     println( "Test Card: BBC Unknown" )
 
-    ctx := animGraphic.NewContext(0,5*30,30,5*30)
+    ctx := animGraphic.NewContext()
 
     testCardBBCUnknown(ctx)
 

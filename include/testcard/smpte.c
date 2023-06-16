@@ -60,7 +60,7 @@ testCardSMPTE(ctx) {
 main() {
     println( "Test Card: SMPTE" )
 
-    ctx := animGraphic.NewContext(0,5*30,30,5*30)
+    ctx := animGraphic.NewContext()
 
     testCardSMPTE(ctx)
 

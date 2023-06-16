@@ -9,15 +9,9 @@ import (
 func CloneContext(ctx Context) Context {
 	if c, ok := ctx.(*context); ok {
 		n := &context{
-			curFrame:  c.curFrame,
-			nextFrame: c.nextFrame,
-			start:     c.start,
-			end:       c.end,
-			frameRate: c.frameRate,
-			duration:  c.duration,
-			width:     c.width,
-			height:    c.height,
-			userdata:  make(map[string]any),
+			width:    c.width,
+			height:   c.height,
+			userdata: make(map[string]any),
 		}
 
 		// Copy the image as-is

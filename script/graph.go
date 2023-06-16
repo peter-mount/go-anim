@@ -12,8 +12,8 @@ import (
 type Graph struct {
 }
 
-func (_ Graph) NewContext(start, end int, frameRate, duration float64) renderer.Context {
-	return renderer.NewContext(start, end, frameRate, duration)
+func (_ Graph) NewContext() renderer.Context {
+	return renderer.NewContext()
 }
 
 func (_ Graph) NewFont(name string, size float64, family draw2d.FontFamily, style draw2d.FontStyle) font.Font {

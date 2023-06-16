@@ -10,33 +10,17 @@ import (
 // NewContext creates a new context.
 // start,end are the frame range to cover, frameRate the frame rate of the track
 // whilst duration is the total duration of the track in frames
-func NewContext(start, end int, frameRate, duration float64) Context {
-	ctx := &context{
-		start:     start,
-		end:       end,
-		nextFrame: start,
-		frameRate: frameRate,
-		duration:  duration,
-	}
+func NewContext() Context {
+	ctx := &context{}
 	return ctx.NewImage()
 }
 
 type context struct {
-	curFrame  int                       // current frame number
-	nextFrame int                       // next frame number
-	start     int                       // start frame number
-	end       int                       // end frame number
-	frameRate float64                   // frame rate fps
-	duration  float64                   // Duration of clip
-	img       draw.Image                // Image to use for frame generation
-	width     int                       // Width of image
-	height    int                       // Height of image
-	gc        *draw2dimg.GraphicContext // Graphic context
-	userdata  map[string]any            // User data
-}
-
-func (c *context) HasNext() bool {
-	return c.nextFrame <= c.end
+	img      draw.Image                // Image to use for frame generation
+	width    int                       // Width of image
+	height   int                       // Height of image
+	gc       *draw2dimg.GraphicContext // Graphic context
+	userdata map[string]any            // User data
 }
 
 func (c *context) Image() draw.Image {
@@ -79,30 +63,6 @@ func (c *context) Bounds() util.Rectangle {
 
 func (c *context) Gc() *draw2dimg.GraphicContext {
 	return c.gc
-}
-
-func (c *context) FrameRate() float64 {
-	return c.frameRate
-}
-
-func (c *context) Duration() float64 {
-	return c.duration
-}
-
-func (c *context) Start() int {
-	return c.start
-}
-
-func (c *context) End() int {
-	return c.end
-}
-
-func (c *context) Frame() int {
-	return c.curFrame
-}
-
-func (c *context) FrameF() float64 {
-	return float64(c.Frame())
 }
 
 func (c *context) Get(k string) any {

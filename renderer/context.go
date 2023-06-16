@@ -20,18 +20,6 @@ type Context interface {
 	Center() (float64, float64)
 	// Gc draw2dimg.GraphicContext
 	Gc() *draw2dimg.GraphicContext
-	// FrameRate of the video
-	FrameRate() float64
-	// Duration of the video
-	Duration() float64
-	// Start frame in this run
-	Start() int
-	// End frame in this run
-	End() int
-	// Frame Current frame number being rendered
-	Frame() int
-	// FrameF shorthand for float64(Frame())
-	FrameF() float64
 	// Get returns a named user object, used in keeping state.
 	// This is cleared at the start of each frame
 	Get(string) any
@@ -41,8 +29,6 @@ type Context interface {
 	Set(string, any) Context
 	// Remove removes a key from the user object storage
 	Remove(k string) Context
-	// HasNext true if there's more frames in the Context
-	HasNext() bool
 	Create() error
 	Close() error
 	Reset() Context

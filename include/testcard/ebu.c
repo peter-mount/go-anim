@@ -18,7 +18,7 @@ testCardEBU(ctx) {
 main() {
     println( "Test Card: EBU" )
 
-    ctx := animGraphic.NewContext(0,5*30,30,5*30)
+    ctx := animGraphic.NewContext()
 
     testCardEBU(ctx)
 
