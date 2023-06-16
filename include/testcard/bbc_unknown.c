@@ -96,6 +96,6 @@ main() {
     testCardBBCUnknown(ctx)
 
     try( f:=os.Create("/home/peter/test.png") ) {
-        image.WritePNG(f,ctx.Image())
+        png.Encode(f,ctx.Image())
     }
 }

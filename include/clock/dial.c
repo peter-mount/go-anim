@@ -41,6 +41,6 @@ main() {
     clockSecondHand(ctx, 1920, 1080, 540, false, 19)
 
     try( f:=os.Create("/home/peter/test.png") ) {
-        image.WritePNG(f,ctx.Image())
+        png.Encode(f,ctx.Image())
     }
 }

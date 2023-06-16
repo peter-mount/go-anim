@@ -4,8 +4,6 @@ import (
 	"github.com/peter-mount/go-anim/renderer"
 	"image"
 	"image/color"
-	"image/png"
-	"io"
 )
 
 type Image struct {
@@ -42,9 +40,4 @@ func (_ Image) Fill(ctx renderer.Context, background color.Color) {
 	defer gc.Restore()
 	gc.SetFillColor(background)
 	gc.ClearRect(0, 0, ctx.Width(), ctx.Height())
-}
-
-// WritePNG writes a PNG to a writer
-func (i Image) WritePNG(w io.Writer, img image.Image) error {
-	return png.Encode(w, img)
 }

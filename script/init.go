@@ -1,6 +1,9 @@
 package script
 
-import "github.com/peter-mount/go-script/packages"
+import (
+	"github.com/peter-mount/go-anim/script/io"
+	"github.com/peter-mount/go-script/packages"
+)
 
 func init() {
 	packages.Register("animGraphic", &Graph{})
@@ -8,4 +11,7 @@ func init() {
 	packages.Register("colour", &Colour{})
 	packages.Register("draw2dimg", &Draw2Dimg{})
 	packages.Register("image", newImage())
+
+	packages.Register("jpeg", &io.JPEG{})
+	packages.Register("png", &io.PNG{})
 }
