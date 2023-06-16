@@ -30,9 +30,8 @@ func (_ Graph) SetFont(gc *draw2dimg.GraphicContext, s string) error {
 		return err
 	}
 
-	fd := f.FontData()
-	gc.SetFontData(fd)
-	gc.SetFontSize(gc.Current.FontSize)
+	gc.SetFontData(f.FontData())
+	gc.SetFontSize(f.Size())
 	return nil
 }
 
