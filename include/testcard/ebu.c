@@ -11,7 +11,8 @@ testCardEBU(ctx) {
         colour.Colour("#00c000"),
         colour.Colour("#c000c0"),
         colour.Colour("#c00000"),
-        colour.Colour("#0000c0")
+        colour.Colour("#0000c0"),
+        colour.Colour("#000000")
     )
 }
 
