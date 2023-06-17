@@ -7,6 +7,10 @@ import (
 
 type Colour struct{}
 
+func (_ Colour) Grey(y int) color.Color {
+	return color.Gray{Y: uint8(y)}
+}
+
 func (_ Colour) GreyScale(i int) color.Color {
 	return color2.GreyScale(i)
 }
