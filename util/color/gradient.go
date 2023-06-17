@@ -1,7 +1,6 @@
 package color
 
 import (
-	"fmt"
 	"image/color"
 )
 
@@ -19,15 +18,8 @@ func Gradient(n int, from, to color.Color) []color.Color {
 	}
 
 	r = append(r, to)
-	fmt.Printf("Frm %8d %8d %8d %8d\n", fr, fg, fb, fa)
-	fmt.Printf(" To %8d %8d %8d %8d\n", tr, tg, tb, ta)
-	for i, c := range r {
-		r, g, b, a := c.RGBA()
-		fmt.Printf("%3d %8d %8d %8d %8d\n", i, r, g, b, a)
-	}
 
 	return r
-	//return
 }
 
 func diff(f, t uint32, n int) int32 {

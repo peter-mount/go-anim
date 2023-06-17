@@ -212,6 +212,36 @@ testCardUHD_Top(ctx, s) {
         )
 
         testCardUHD_bottomBorders(ctx,s)
+
+        // inner border
+        try (ctx) {
+            gc.SetStrokeColor(s.white)
+        	gc.SetLineWidth(10)
+        	gc.BeginPath()
+        	animGraphic.Rectangle(gc, s.dW, s.dH, s.w-(s.dW*2), s.h-(s.dH*2))
+        	gc.Stroke()
+        }
+
+        // triangles
+        try (ctx) {
+            // Diamonds left/right center
+            diaDw := s.dW - 12
+            //for _, x := range append(newArray(), 0.0, s.dW2 - 15.0, s.w - s.dW2, s.w - s.dW2 - s.dW2 + 17.0) {
+            animGraphic.FillPolyRel(gc, s.white, 0, s.h2, s.dW, -s.dH23, diaDw, s.dH23, -diaDw, s.dH23)
+            animGraphic.FillPolyRel(gc, s.white, s.dW2-15, s.h2, s.dW, -s.dH23, diaDw, s.dH23, -diaDw, s.dH23)
+            animGraphic.FillPolyRel(gc, s.white, s.w-s.dW2, s.h2, s.dW, -s.dH23, diaDw, s.dH23, -diaDw, s.dH23)
+            animGraphic.FillPolyRel(gc, s.white, ((s.w-s.dW2)-s.dW2)+17.0, s.h2, s.dW, -s.dH23, diaDw, s.dH23, -diaDw, s.dH23)
+
+            // left center triangle
+            animGraphic.FillPolyRel(gc, s.white, (s.dW2*2)-30, s.h2, s.dW-2, -s.dH23, 0, s.dH23*2)
+
+            // right center triangle
+            animGraphic.FillPolyRel(gc, s.white, ((s.w-(s.dW2*2))+30)-12, s.h2, -diaDw+2, -s.dH23, 0, s.dH23*2)
+
+            // Top/Bottom triangles
+            animGraphic.FillPolyRel(gc, s.white, s.w2, s.h-1, -s.dH/2, -s.dH, s.dH, 0)
+            animGraphic.FillPolyRel(gc, s.white, s.w2, 0, -s.dH/2, s.dH, s.dH, 0)
+        }
     }
 }
 
@@ -354,13 +384,22 @@ testCardUHD_bottomBorders(ctx,s) {
         }
     
         // Bottom right border
-        x = 0
-        dx = (s.w2/2.0 - s.dW) / 256.0
-        for i := 255; i > 0; i=i-1 {
-            animGraphic.FillRectangle(gc, s.w2+x, s.h-s.dH, dx, s.dHd2, colour.Grey(32 + ((255 - i)/2)))
-            xy := animGraphic.FillRectangle(gc, x, s.h-s.dHd2, dx, s.dHd2, colour.Grey(i))
-            x = xy[0]
+        grad1 :=colour.Gradient(256, colour.Colour("#3cad7c"), colour.Colour("#808080"))
+        grad2 :=colour.Gradient(256, colour.Colour("#808080"), colour.Colour("#d25580"))
+        grad3 :=colour.Gradient(256, colour.Colour("#829600"), colour.Colour("#808080"))
+        grad4 :=colour.Gradient(256, colour.Colour("#808080"), colour.Colour("#7a6bf1"))
+        x = math.Float(s.w2+s.dW)
+        dw := (s.w2+s.dW2)/2.0
+        dx := dw / 256.0
+        dw = dw - s.dW2
+        for i := 0; i < len(grad1); i=i+1 {
+            animGraphic.FillRectangle(gc, x, s.h-s.dH, dx, s.dHd2, grad1[i])
+            animGraphic.FillRectangle(gc, x+dw, s.h-s.dH, dx, s.dHd2, grad2[i])
+            animGraphic.FillRectangle(gc, x, s.h-s.dHd2, dx, s.dHd2, grad3[i])
+            animGraphic.FillRectangle(gc, x+dw, s.h-s.dHd2, dx, s.dHd2, grad4[i])
+            x = (x + dx) -1
         }
+
     }
 }
 
