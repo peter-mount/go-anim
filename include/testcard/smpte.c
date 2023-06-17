@@ -9,8 +9,9 @@ testCardSMPTE(ctx) {
     w := ctx.Width()
     h := ctx.Height()
     ub := animUtil.Rect(0, 0, w, h*336.0/504.0)
-    mb := animUtil.Rect(0, ub.Y2, w, ub.Y2+(h*96.0/504.0))
-    lb := animUtil.Rect(0, mb.Y2, w, h) // mb.Y2+(h*126/504))
+    mb := animUtil.Rect(0, ub.Y2, w, ub.Y2+200)//(h*96.0/504.0))
+    //lb := animUtil.Rect(0, mb.Y2, w, h) // mb.Y2+(h*126/504))
+    lb := animUtil.Rect(0, mb.Y2, w, mb.Y2+(h*126.0/504.0))
 
     image.Fill(ctx,black)
 
