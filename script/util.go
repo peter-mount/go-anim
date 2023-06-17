@@ -36,3 +36,7 @@ func (_ AnimUtil) FloatToA(v float64) string {
 func (_ AnimUtil) DrawColourBars(gc *draw2dimg.GraphicContext, bounds util.Rectangle, cols ...color.Color) (float64, float64) {
 	return util.DrawColourBars(gc, bounds, cols...)
 }
+
+func (_ AnimUtil) DrawColourBarsVertical(gc *draw2dimg.GraphicContext, bounds util.Rectangle, cols ...color.Color) (float64, float64) {
+	return util.DrawColourBarsVertical(gc, bounds, cols...)
+}
