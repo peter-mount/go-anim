@@ -10,21 +10,48 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"sync"
 )
 
 type FFMPeg struct{}
 
 // FFMPegSession handles sending frames to FFMPeg
 type FFMPegSession struct {
-	cmd *exec.Cmd
-	r   *io.PipeReader
-	w   *io.PipeWriter
-	err error
+	cmd  *exec.Cmd
+	r    *io.PipeReader
+	w    *io.PipeWriter
+	err  error
+	pool png.EncoderBufferPool
+}
+
+type bufferPool struct {
+	mutex sync.Mutex
+	pool  []*png.EncoderBuffer
+}
+
+func (b *bufferPool) Get() *png.EncoderBuffer {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	if len(b.pool) < 1 {
+		return nil
+	}
+
+	e := b.pool[0]
+	b.pool = b.pool[1:]
+	return e
+}
+
+func (b *bufferPool) Put(e *png.EncoderBuffer) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	b.pool = append(b.pool, e)
 }
 
 // New creates a new FFMPegSession or an error if ffmpeg could not be started.
 func (_ FFMPeg) New(fileName string, frameRate int) (*FFMPegSession, error) {
-	session := &FFMPegSession{}
+	session := &FFMPegSession{pool: &bufferPool{}}
 
 	frameRateS := strconv.Itoa(frameRate)
 
@@ -71,7 +98,15 @@ func (s *FFMPegSession) Write(b []byte) (int, error) {
 // WriteImage writes an image to ffmpeg.
 func (s *FFMPegSession) WriteImage(img image.Image) error {
 	var buf bytes.Buffer
-	err := png.Encode(&buf, img)
+
+	// NoCompression as we are piping to ffmpeg so why spend time compressing?
+	// BufferPool, so we reuse buffers to save memory allocations
+	enc := png.Encoder{
+		CompressionLevel: png.NoCompression,
+		BufferPool:       s.pool,
+	}
+
+	err := enc.Encode(&buf, img)
 	if err == nil {
 		_, err = s.Write(buf.Bytes())
 	}
