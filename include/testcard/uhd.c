@@ -80,7 +80,7 @@ testCardUHD_Lower(ctx, s) {
     }
 }
 
-testCardUHD_Upper1(ctx,gc,s,dd, l, r ) {
+_Upper1(ctx,gc,s,dd, l, r ) {
     animGraphic.RelLine(gc,
         s.dW+(l*s.dx)+dd, s.dH,
         0, (2.0*s.dy)-dd,
@@ -103,9 +103,9 @@ testCardUHD_Upper(ctx, s) {
             (3*s.dx)-dd, 0,
             0, dd-(2*s.dy))
     
-        testCardUHD_Upper1(ctx,gc,s,dd, 3.0, 4.0)
-        testCardUHD_Upper1(ctx,gc,s,dd, 7.0, 1.0)
-        testCardUHD_Upper1(ctx,gc,s,dd, 8.0, 4.0)
+        _Upper1(ctx,gc,s,dd, 3.0, 4.0)
+        _Upper1(ctx,gc,s,dd, 7.0, 1.0)
+        _Upper1(ctx,gc,s,dd, 8.0, 4.0)
     
         animGraphic.RelLine(gc,
             s.dW+(12*s.dx)+dd, s.dH,
@@ -183,9 +183,9 @@ testCardUHD_Top(ctx, s) {
     try( ctx ) {
         gc := ctx.Gc()
 
-        testCardUHD_cornerCalibrationMarks(ctx,s)
-        testCardUHD_leftGradient(ctx,s)
-        testCardUHD_rightGradient(ctx,s)
+        _cornerCalibrationMarks(ctx,s)
+        _leftGradient(ctx,s)
+        _rightGradient(ctx,s)
 
         // Clear bottom border
         animGraphic.FillRectangle(gc, 0, s.h-s.dH, s.w, s.dH, s.black)
@@ -211,7 +211,7 @@ testCardUHD_Top(ctx, s) {
             s.yellow, s.cyan, s.green, s.magenta, s.red, s.blue, s.black
         )
 
-        testCardUHD_bottomBorders(ctx,s)
+        _bottomBorders(ctx,s)
 
         // inner border
         try (ctx) {
@@ -245,15 +245,15 @@ testCardUHD_Top(ctx, s) {
     }
 }
 
-testCardUHD_cornerCalibrationMarks(ctx,s) {
+_cornerCalibrationMarks(ctx,s) {
 	for sy := 0; sy < 2; sy=sy+1 {
 		for sx := 0; sx < 2; sx=sx+1 {
-			testCardUHD_cornerCalibrationMark(ctx,s, sx, sy)
+			_cornerCalibrationMark(ctx,s, sx, sy)
 		}
 	}
 }
 
-testCardUHD_cornerCalibrationMark(ctx,s, sx, sy) {
+_cornerCalibrationMark(ctx,s, sx, sy) {
     try( ctx ) {
         gc := ctx.Gc()
 
@@ -302,7 +302,7 @@ testCardUHD_cornerCalibrationMark(ctx,s, sx, sy) {
 	}
 }
 
-testCardUHD_leftGradient(ctx,s) {
+_leftGradient(ctx,s) {
     try( ctx ) {
         gc := ctx.Gc()
 
@@ -323,7 +323,7 @@ testCardUHD_leftGradient(ctx,s) {
     }
 }
 
-testCardUHD_rightGradient(ctx,s) {
+_rightGradient(ctx,s) {
     try( ctx ) {
         gc := ctx.Gc()
 
@@ -370,7 +370,7 @@ testCardUHD_rightGradient(ctx,s) {
     }
 }
 
-testCardUHD_bottomBorders(ctx,s) {
+_bottomBorders(ctx,s) {
     try( ctx ) {
         gc := ctx.Gc()
 
@@ -403,7 +403,7 @@ testCardUHD_bottomBorders(ctx,s) {
     }
 }
 
-xxtestCardUHD_bottomBorders(ctx,s) {
+xx_bottomBorders(ctx,s) {
     try( ctx ) {
         gc := ctx.Gc()
 
