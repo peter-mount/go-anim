@@ -117,27 +117,27 @@ testCardUHD_Upper(ctx, s) {
             s.dW, s.h-s.dH-(2*s.dy)+dd,
             (3*s.dx)-dd, 0,
             0, 2*s.dy)
-    
+
         animGraphic.RelLine(gc,
-            s.dW+(3*s.dx)+dd, (s.h-s.dH)+dd+dd,
+            s.dW+(3*s.dx)+dd, s.h-s.dH+dd+dd,
             0, (-2*s.dy)-dd,
-            (4*s.dx)-dd+dd, 0,
-            0, s.dy-dd)
-    
+            (4*s.dx)-dd-dd, 0,
+            0, s.dy-dd-dd)
+
         animGraphic.RelLine(gc,
-            s.dW+(7*s.dx)+dd, (s.h-s.dH)-s.dy+dd,
+            s.dW+(7*s.dx)+dd, s.h-s.dH-s.dy-dd,
             0, (-s.dy)+dd+dd,
-            (s.dx)-dd+dd, 0,
+            (s.dx)-dd-dd, 0,
             0, s.dy-dd)
-    
+
         animGraphic.RelLine(gc,
-            s.dW+(8*s.dx)+dd, (s.h-s.dH)-s.dy+dd,
+            s.dW+(8*s.dx)+dd, s.h-s.dH-s.dy-dd,
             0, (-s.dy)+dd+dd,
-            (4*s.dx)-dd+dd, 0,
+            (4*s.dx)-dd-dd, 0,
             0, (2*s.dy)-dd)
-    
+
         animGraphic.RelLine(gc,
-            s.dW+(12*s.dx)+dd, (s.h-s.dH)-dd,
+            s.dW+(12*s.dx)+dd, s.h-s.dH-dd,
             0, (-2*s.dy)+dd+dd,
             (3*s.dx)-dd-dd, 0)
     
@@ -147,32 +147,32 @@ testCardUHD_Upper(ctx, s) {
             (3*s.dx)-dd, 0,
             0, (2*s.dy)-dd-dd,
             -s.dx+dd+dd, 0,
-            0, -s.dy/2.0)
-    
+            0, -s.dy/2)
+
         animGraphic.RelLine(gc,
             s.dW, s.h-(s.dH+(2*s.dy)+dd),
             (3*s.dx)-dd, 0,
             0, -((2 * s.dy) - dd - dd),
             -s.dx+dd+dd, 0,
-            0, s.dy/2.0)
-    
+            0, s.dy/2)
+
         animGraphic.RelLine(gc,
             s.w-s.dW, s.dH+(2*s.dy)+dd,
             -((3 * s.dx) - dd), 0,
             0, (2*s.dy)-dd-dd,
             -(-s.dx + dd + dd), 0,
-            0, -s.dy/2.0)
-    
+            0, -s.dy/2)
+
         animGraphic.RelLine(gc,
             s.w-s.dW, s.h-(s.dH+(2*s.dy)+dd),
             -((3 * s.dx) - dd), 0,
             0, -((2 * s.dy) - dd - dd),
             -(-s.dx + dd + dd), 0,
-            0, s.dy/2.0)
-    
+            0, s.dy/2)
+
         // Odd 2 lines on either side of center
         animGraphic.RelLine(gc, s.dW+(2*s.dx)-dd, s.dH+(3.5*s.dy)-dd, 0, s.dy+dd+dd)
-        animGraphic.RelLine(gc, (s.w-s.dW)-(2*s.dx)-dd, s.dH+(3.5*s.dy)-dd, 0, s.dy+dd+dd)
+        animGraphic.RelLine(gc, s.w-s.dW-(2*s.dx)+dd, s.dH+(3.5*s.dy)-dd, 0, s.dy+dd+dd)
     
         // Draw black lines
         gc.Stroke()
