@@ -2,6 +2,7 @@ package dataencoder
 
 import (
 	"github.com/peter-mount/go-kernel/v2/util/walk"
+	"github.com/peter-mount/go-script/tools/dataencoder"
 	"io"
 	"os"
 	"path/filepath"
@@ -10,11 +11,14 @@ import (
 
 // Lib copies the include directory to the distribution
 type Lib struct {
-	Encoder *Encoder `kernel:"inject"`
-	Source  *string  `kernel:"flag,lib,install lib"`
+	Encoder *dataencoder.Encoder `kernel:"inject"`
+	Build   *dataencoder.Build   `kernel:"inject"`
+	Source  *string              `kernel:"flag,lib,install lib"`
 }
 
 func (s *Lib) Start() error {
+	s.Build.AddLibProvider(s.includeLib)
+
 	if *s.Source != "" {
 		return walk.NewPathWalker().
 			Then(s.copy).
@@ -23,6 +27,10 @@ func (s *Lib) Start() error {
 	}
 
 	return nil
+}
+
+func (s *Lib) includeLib(dest string) (string, []string) {
+	return filepath.Join(dest, "lib"), []string{"-lib", "lib"}
 }
 
 func (s *Lib) copy(path string, info os.FileInfo) error {
