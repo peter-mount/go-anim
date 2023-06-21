@@ -14,9 +14,12 @@ import (
 )
 
 type Build struct {
-	Encoder   *Encoder `kernel:"inject"`
-	Dest      *string  `kernel:"flag,build,generate build files"`
-	Platforms *string  `kernel:"flag,build-platform,platform(s) to build"`
+	Encoder     *Encoder `kernel:"inject"`
+	Dest        *string  `kernel:"flag,build,generate build files"`
+	Platforms   *string  `kernel:"flag,build-platform,platform(s) to build"`
+	PackageName *string  `kernel:"flag,package,package name"`
+	Dist        *string  `kernel:"flag,dist,distribution destination"`
+	Prefix      *string  `kernel:"flag,prefix,Prefix to archive"`
 }
 
 // Arch output from go tool dist list
@@ -30,6 +33,10 @@ type Arch struct {
 
 func (a Arch) IsMobile() bool {
 	return a.GOOS == "android" || a.GOOS == "ios" || a.GOOS == "js"
+}
+
+func (a Arch) IsWindows() bool {
+	return a.GOOS == "windows"
 }
 
 func (a Arch) Platform() string {
@@ -49,14 +56,6 @@ func (a Arch) Tool(builds, tool string) string {
 		tool = tool + ".exe"
 	}
 	return filepath.Join(a.BaseDir(builds), "bin", tool)
-}
-
-func (a Arch) Lib(builds, lib string) string {
-	return filepath.Join(a.BaseDir(builds), lib)
-}
-
-func (a Arch) Include(builds, include string) string {
-	return filepath.Join(a.BaseDir(builds), include)
 }
 
 func (s *Build) Start() error {
@@ -183,7 +182,8 @@ func (s *Build) generate(tools []string, arches []Arch) error {
 	}
 	a = append(a, "all: "+strings.Join(archListTargets, " "), "")
 
-	var archList, toolList, libList []string
+	var archList, toolList []string
+	libList := make(map[string][]string)
 
 	los := ""
 	var losdep []string
@@ -225,16 +225,61 @@ func (s *Build) generate(tools []string, arches []Arch) error {
 		}
 
 		// Rules for lib files
-		libList, archListTargets = s.build(libList, archListTargets, arch, arch.Lib, "lib", "-lib", "lib")
-		libList, archListTargets = s.build(libList, archListTargets, arch, arch.Include, "include", "-include", "include")
+		localLib := make(map[string][]string)
+		s.build(localLib,
+			func(builds, lib string) string { return filepath.Join(arch.BaseDir(builds), "lib") },
+			"lib",
+			"-lib", "lib")
+		s.build(localLib,
+			func(builds, lib string) string { return filepath.Join(arch.BaseDir(builds), "include") },
+			"include",
+			"-include", "include")
+		s.build(localLib,
+			func(builds, lib string) string { return filepath.Join(arch.BaseDir(builds), "demo") },
+			"include",
+			"-include", "demo")
+
+		// Add localLib to targets & global libList
+		for k, v := range localLib {
+			libList[k] = append(libList[k], v...)
+			archListTargets = append(archListTargets, k)
+		}
+
+		// Tar/Zip
+		archive := filepath.Join(*s.Dist, fmt.Sprintf("%s-%s_%s%s.tgz", *s.Prefix, arch.GOOS, arch.GOARCH, arch.GOARM))
+		toolList = append(toolList,
+			"",
+			archive+":",
+			"\t@mkdir -p "+*s.Dist,
+			fmt.Sprintf(
+				"\t$(call cmd,\"TAR\",%s);tar -P --transform \"s|^%s|%s|\" -czpf %s %s",
+				archive,
+				arch.BaseDir(*s.Encoder.Dest),
+				*s.PackageName,
+				archive,
+				arch.BaseDir(*s.Encoder.Dest),
+			),
+		)
+		archListTargets = append(archListTargets, archive)
 
 		// Do archList last
 		archList = append(archList, arch.Target()+": "+strings.Join(archListTargets, " "))
+
 	}
 
 	a = append(a, archList...)
 	a = append(a, toolList...)
-	a = append(a, libList...)
+
+	var keys []string
+	for k, _ := range libList {
+		keys = append(keys, k)
+	}
+	sort.SliceStable(keys, func(i, j int) bool { return keys[i] < keys[j] })
+
+	for _, k := range keys {
+		a = append(a, "", k+":")
+		a = append(a, libList[k]...)
+	}
 
 	// Ensure we have a blank line at end
 	a = append(a, "")
@@ -245,23 +290,17 @@ func (s *Build) generate(tools []string, arches []Arch) error {
 	return os.WriteFile(*s.Dest, []byte(strings.Join(a, "\n")), 0644)
 }
 
-func (s *Build) build(libList, archListTargets []string, arch Arch, f func(builds, lib string) string, lib string, args ...string) ([]string, []string) {
+func (s *Build) build(libList map[string][]string, f func(builds, lib string) string, lib string, args ...string) {
 	dest := f(*s.Encoder.Dest, lib)
-	libList = append(libList,
-		"",
-		dest+":",
+	libList[dest] = append(libList[dest],
 		fmt.Sprintf(
 			"\t$(call cmd,\"GENERATE\",\"%s\");%s -d %s %s",
-			lib,
+			strings.Join(strings.Split(dest, "/")[1:], " "),
 			filepath.Join(*s.Encoder.Dest, "dataencoder"),
 			dest,
 			strings.Join(args, " "),
 		),
 	)
-
-	archListTargets = append(archListTargets, dest)
-
-	return libList, archListTargets
 }
 
 func (s *Build) platformIndex(arches []Arch) error {
