@@ -2,6 +2,7 @@ package renderer
 
 import (
 	"github.com/llgcode/draw2d/draw2dimg"
+	"github.com/peter-mount/go-anim/graph"
 	"github.com/peter-mount/go-anim/util"
 	"golang.org/x/image/draw"
 	"image"
@@ -107,4 +108,20 @@ func (c *context) Draw(d Drawable) {
 	if d != nil {
 		d.Draw(c)
 	}
+}
+
+func (c *context) Filter(f graph.Filter) error {
+	return f.DoOver(c.Image())
+}
+
+func (c *context) FilterBounds(f graph.Filter, b image.Rectangle) error {
+	return f.Do(c.Image(), c.Image(), b)
+}
+
+func (c *context) Map(m graph.Mapper) error {
+	return c.Filter(m.Filter())
+}
+
+func (c *context) MapBounds(m graph.Mapper, b image.Rectangle) error {
+	return c.FilterBounds(m.Filter(), b)
 }

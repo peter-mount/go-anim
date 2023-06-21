@@ -2,8 +2,10 @@ package renderer
 
 import (
 	"github.com/llgcode/draw2d/draw2dimg"
+	"github.com/peter-mount/go-anim/graph"
 	"github.com/peter-mount/go-anim/util"
 	"golang.org/x/image/draw"
+	"image"
 )
 
 type Context interface {
@@ -33,6 +35,10 @@ type Context interface {
 	Close() error
 	Reset() Context
 	Draw(d Drawable)
+	Filter(f graph.Filter) error
+	FilterBounds(f graph.Filter, b image.Rectangle) error
+	Map(m graph.Mapper) error
+	MapBounds(m graph.Mapper, b image.Rectangle) error
 }
 
 type Drawable interface {
