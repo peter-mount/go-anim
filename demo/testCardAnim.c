@@ -12,7 +12,7 @@ main() {
 
     totalFrames := frameRate * duration
 
-    try( encoder := ffmpeg.New( "test.mp4", frameRate ) ) {
+    try( encoder := ffmpeg.Raw( "test.mp4", frameRate, ctx.Image() ) ) {
         for frame:=0; frame< totalFrames; frame=frame+1 {
             // The shared state
             state := testCardUHD_Init(ctx)

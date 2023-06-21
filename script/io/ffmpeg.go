@@ -17,11 +17,11 @@ type FFMPeg struct{}
 
 // FFMPegSession handles sending frames to FFMPeg
 type FFMPegSession struct {
-	cmd  *exec.Cmd
-	r    *io.PipeReader
-	w    *io.PipeWriter
-	err  error
-	pool png.EncoderBufferPool
+	cmd  *exec.Cmd             // The ffmpeg command
+	r    *io.PipeReader        // stdin to ffmpeg
+	w    *io.PipeWriter        // writer to send images to ffmpeg
+	pool png.EncoderBufferPool // pool of buffers to save on memory allocations
+	raw  bool                  // if true send the image raw to ffmpeg
 }
 
 type bufferPool struct {
@@ -49,22 +49,36 @@ func (b *bufferPool) Put(e *png.EncoderBuffer) {
 	b.pool = append(b.pool, e)
 }
 
-// New creates a new FFMPegSession or an error if ffmpeg could not be started.
-func (_ FFMPeg) New(fileName string, frameRate int) (*FFMPegSession, error) {
-	session := &FFMPegSession{pool: &bufferPool{}}
+func (_ FFMPeg) new(fileName string, frameRate int, srcArgs []string, raw bool) (*FFMPegSession, error) {
+	session := &FFMPegSession{
+		pool: &bufferPool{},
+		raw:  raw,
+	}
 
 	frameRateS := strconv.Itoa(frameRate)
 
-	session.cmd = exec.Command(
-		"ffmpeg",
+	var args []string
+
+	if len(srcArgs) > 0 {
+		args = append(args, srcArgs...)
+	}
+
+	args = append(args,
 		"-y",
 		"-framerate", frameRateS,
 		"-i", "-", // pipe from stdin
+	)
+
+	args = append(args,
 		"-r", frameRateS,
 		"-c:v", "libx264",
 		"-pix_fmt", "yuv420p",
-		fileName,
 	)
+
+	args = append(args, fileName)
+
+	fmt.Println(session.raw, "ffmpeg", args)
+	session.cmd = exec.Command("ffmpeg", args...)
 
 	session.r, session.w = io.Pipe()
 
@@ -75,6 +89,39 @@ func (_ FFMPeg) New(fileName string, frameRate int) (*FFMPegSession, error) {
 	}
 
 	return session, session.cmd.Start()
+}
+
+// New creates a new FFMPegSession or an error if ffmpeg could not be started.
+func (f FFMPeg) New(fileName string, frameRate int) (*FFMPegSession, error) {
+	return f.new(fileName, frameRate, nil, false)
+}
+
+func (f FFMPeg) Raw(fileName string, frameRate int, src image.Image) (*FFMPegSession, error) {
+	var args []string
+	raw := false
+
+	if src != nil {
+		if i, ok := src.(*image.RGBA); ok {
+			b := i.Bounds()
+			args = append(args,
+				"-f", "rawvideo",
+				"-s", fmt.Sprintf("%dx%d", b.Dx(), b.Dy()),
+				"-pix_fmt", "rgba",
+			)
+			raw = true
+		} else if i, ok := src.(*image.RGBA64); ok {
+			b := i.Bounds()
+			args = append(args,
+				"-s", fmt.Sprintf("%dx%d", b.Dx(), b.Dy()),
+				"-pix_fmt", "rgba64",
+			)
+			raw = true
+		} else {
+			return nil, fmt.Errorf("unsupported raw image format %T", src)
+		}
+	}
+
+	return f.new(fileName, frameRate, args, raw)
 }
 
 // Close closes the FFMPegSession.
@@ -96,7 +143,18 @@ func (s *FFMPegSession) Write(b []byte) (int, error) {
 }
 
 // WriteImage writes an image to ffmpeg.
-func (s *FFMPegSession) WriteImage(img image.Image) error {
+func (s *FFMPegSession) WriteImage(img image.Image) (err error) {
+	if s.raw {
+		if i, ok := img.(*image.RGBA); ok {
+			_, err = s.Write(i.Pix)
+		} else if i, ok := img.(*image.RGBA64); ok {
+			_, err = s.Write(i.Pix)
+		} else {
+			err = fmt.Errorf("unsupported image type %T for raw mode", img)
+		}
+		return
+	}
+
 	var buf bytes.Buffer
 
 	// NoCompression as we are piping to ffmpeg so why spend time compressing?
@@ -106,9 +164,10 @@ func (s *FFMPegSession) WriteImage(img image.Image) error {
 		BufferPool:       s.pool,
 	}
 
-	err := enc.Encode(&buf, img)
+	err = enc.Encode(&buf, img)
 	if err == nil {
 		_, err = s.Write(buf.Bytes())
 	}
-	return err
+
+	return
 }
