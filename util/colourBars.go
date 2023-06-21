@@ -1,8 +1,8 @@
 package util
 
 import (
-	"git.area51.dev/peter/videoident/util/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
+	"github.com/peter-mount/go-anim/util/draw2d"
 	"image/color"
 )
 

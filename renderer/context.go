@@ -1,8 +1,8 @@
 package renderer
 
 import (
-	"git.area51.dev/peter/videoident/util"
 	"github.com/llgcode/draw2d/draw2dimg"
+	"github.com/peter-mount/go-anim/util"
 	"golang.org/x/image/draw"
 )
 
@@ -32,4 +32,9 @@ type Context interface {
 	Create() error
 	Close() error
 	Reset() Context
+	Draw(d Drawable)
+}
+
+type Drawable interface {
+	Draw(ctx Context)
 }

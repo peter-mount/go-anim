@@ -1,10 +1,8 @@
 package color
 
 import (
-	"encoding/xml"
 	"errors"
 	"fmt"
-	"git.area51.dev/peter/videoident/util"
 	"golang.org/x/image/colornames"
 	"image/color"
 	"strings"
@@ -22,20 +20,6 @@ func Equals(a, b color.Color) bool {
 	r0, g0, b0, a0 := a.RGBA()
 	r1, g1, b1, a1 := b.RGBA()
 	return r0 == r1 && g0 == g1 && b0 == b1 && a0 == a1
-}
-
-func AppendColorAttr(a []xml.Attr, n string, c color.Color) []xml.Attr {
-	if c != nil {
-		return util.AppendAttr(a, n, ColourString(c))
-	}
-	return a
-}
-
-func AppendColorSizeAttr(a []xml.Attr, n string, f float64, c color.Color) []xml.Attr {
-	if f != 0 && c != nil {
-		return util.AppendAttrf(a, n, "%s %s", util.FloatToA(f), ColourString(c))
-	}
-	return a
 }
 
 func ColourString(c color.Color) string {
@@ -106,14 +90,14 @@ func ParseColour(hex string) (c color.RGBA, err error) {
 		c.G = (hexToByte(hex[3]) << 4) + hexToByte(hex[4])
 		c.B = (hexToByte(hex[5]) << 4) + hexToByte(hex[6])
 	case 5:
-		c.R = hexToByte(hex[1]) * 17
-		c.G = hexToByte(hex[2]) * 17
-		c.B = hexToByte(hex[3]) * 17
-		c.A = hexToByte(hex[4]) * 17
+		c.R = hexToByte(hex[1]) << 4
+		c.G = hexToByte(hex[2]) << 4
+		c.B = hexToByte(hex[3]) << 4
+		c.A = hexToByte(hex[4]) << 4
 	case 4:
-		c.R = hexToByte(hex[1]) * 17
-		c.G = hexToByte(hex[2]) * 17
-		c.B = hexToByte(hex[3]) * 17
+		c.R = hexToByte(hex[1]) << 4
+		c.G = hexToByte(hex[2]) << 4
+		c.B = hexToByte(hex[3]) << 4
 	default:
 		err = ErrInvalidFormat
 	}

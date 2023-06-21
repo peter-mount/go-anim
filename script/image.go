@@ -1,6 +1,7 @@
 package script
 
 import (
+	color2 "github.com/peter-mount/go-anim/graph/color"
 	"github.com/peter-mount/go-anim/renderer"
 	"image"
 	"image/color"
@@ -33,6 +34,11 @@ func (_ Image) NewRGBA(w, h int) *image.RGBA {
 	return image.NewRGBA(image.Rect(0, 0, w, h))
 }
 
+// NewRGBA64 creates an RGBA64 image with the specified dimensions
+func (_ Image) NewRGBA64(w, h int) *image.RGBA64 {
+	return image.NewRGBA64(image.Rect(0, 0, w, h))
+}
+
 // Fill fills the image in the context with a specific colour
 func (_ Image) Fill(ctx renderer.Context, background color.Color) {
 	gc := ctx.Gc()
@@ -40,4 +46,8 @@ func (_ Image) Fill(ctx renderer.Context, background color.Color) {
 	defer gc.Restore()
 	gc.SetFillColor(background)
 	gc.ClearRect(0, 0, ctx.Width(), ctx.Height())
+}
+
+func (_ Image) Histogram(src image.Image) *color2.Histogram {
+	return color2.NewHistogram().AnalyzeImage(src)
 }

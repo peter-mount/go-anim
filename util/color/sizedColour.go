@@ -2,7 +2,7 @@ package color
 
 import (
 	"fmt"
-	"git.area51.dev/peter/videoident/util/unit"
+	"github.com/peter-mount/go-anim/util/unit"
 	"image/color"
 	"strings"
 )

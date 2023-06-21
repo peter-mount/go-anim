@@ -1,6 +1,7 @@
 package script
 
 import (
+	color4 "github.com/peter-mount/go-anim/graph/color"
 	color2 "github.com/peter-mount/go-anim/util/color"
 	"image/color"
 )
@@ -25,4 +26,12 @@ func (_ Colour) Colour(hex string) (color.RGBA, error) {
 
 func (_ Colour) Gradient(n int, from, to color.Color) []color.Color {
 	return color2.Gradient(n, from, to)
+}
+
+func (_ Colour) Invert(c color.Color) color.Color {
+	return color4.InvertColor(c)
+}
+
+func (_ Colour) Histogram() *color4.Histogram {
+	return color4.NewHistogram()
 }

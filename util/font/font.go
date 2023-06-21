@@ -1,8 +1,6 @@
 package font
 
 import (
-	"encoding/xml"
-	"git.area51.dev/peter/videoident/util"
 	"github.com/golang/freetype/truetype"
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
@@ -111,32 +109,6 @@ func (f *font) StringLength(s string) float64 {
 func FUnitsToFloat64(x fixed.Int26_6) float64 {
 	scaled := x << 2
 	return float64(scaled/256) + float64(scaled%256)/256.0
-}
-
-func AppendFontAttr(a []xml.Attr, n string, f Font) []xml.Attr {
-	if f != nil {
-		var s []string
-		s = append(s, f.Name(), util.FloatToA(f.Size()))
-		switch f.Family() {
-		case draw2d.FontFamilySans:
-			s = append(s, "sans")
-		case draw2d.FontFamilySerif:
-			s = append(s, "serif")
-		case draw2d.FontFamilyMono:
-			s = append(s, "mono")
-		}
-
-		// These can both happen
-		if (f.Style() & draw2d.FontStyleBold) == draw2d.FontStyleBold {
-			s = append(s, "bold")
-		}
-		if (f.Style() & draw2d.FontStyleItalic) == draw2d.FontStyleItalic {
-			s = append(s, "italic")
-		}
-
-		return util.AppendAttr(a, n, strings.Join(s, " "))
-	}
-	return a
 }
 
 func ParseFont(s string) (Font, error) {

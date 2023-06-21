@@ -1,7 +1,7 @@
 package time
 
 import (
-	"git.area51.dev/peter/videoident/util"
+	"github.com/peter-mount/go-anim/util"
 	"strconv"
 	"strings"
 )

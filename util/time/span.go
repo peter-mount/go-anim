@@ -1,10 +1,7 @@
 package time
 
 import (
-	"encoding/xml"
-	"git.area51.dev/peter/videoident/util"
-	util2 "github.com/peter-mount/go-graphics/util"
-	"strconv"
+	"github.com/peter-mount/go-anim/util"
 )
 
 type Span struct {
@@ -72,8 +69,8 @@ func (s Span) calcDuration(fps int) Duration {
 // Add adds two spans together so the returned one includes both.
 func (s Span) Add(b Span, fps int) Span {
 	r := Span{
-		start: util2.Min(s.start, b.start),
-		end:   util2.Max(s.end, b.end),
+		start: util.Min(s.start, b.start),
+		end:   util.Max(s.end, b.end),
 		// Only keep the duration on the left hand side
 		useDuration: s.useDuration,
 	}
@@ -82,40 +79,4 @@ func (s Span) Add(b Span, fps int) Span {
 	r.duration = r.calcDuration(fps)
 
 	return r
-}
-
-func (s Span) AppendSpanAttr(a []xml.Attr) []xml.Attr {
-	//a = util.AppendIntAttr(a, "start", s.start)
-
-	// Include only one of these attributes depending on which one takes precedence
-	if s.useDuration {
-		a = util.AppendAttr(a, "duration", s.duration.String())
-	} else {
-		a = util.AppendIntAttr(a, "end", s.end)
-	}
-	return a
-}
-
-func ParseSpan(a []xml.Attr) (Span, error) {
-	s := Span{start: -1, end: -1}
-	var err error
-	for _, attr := range a {
-		switch attr.Name.Local {
-		//case "start":
-		//	s.start, err = strconv.Atoi(attr.Value)
-
-		case "end":
-			s.end, err = strconv.Atoi(attr.Value)
-
-		case "duration":
-			s.duration, err = ParseDuration(attr.Value)
-			s.useDuration = true
-		}
-
-		if err != nil {
-			return Span{}, err
-		}
-	}
-
-	return s, nil
 }

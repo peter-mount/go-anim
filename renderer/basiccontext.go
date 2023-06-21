@@ -1,8 +1,8 @@
 package renderer
 
 import (
-	"git.area51.dev/peter/videoident/util"
 	"github.com/llgcode/draw2d/draw2dimg"
+	"github.com/peter-mount/go-anim/util"
 	"golang.org/x/image/draw"
 	"image"
 )
@@ -101,4 +101,10 @@ func (c *context) Reset() Context {
 	// Reset the Context state
 	c.gc = draw2dimg.NewGraphicContext(c.img)
 	return c
+}
+
+func (c *context) Draw(d Drawable) {
+	if d != nil {
+		d.Draw(c)
+	}
 }

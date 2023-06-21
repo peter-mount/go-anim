@@ -12,6 +12,9 @@ func init() {
 	packages.Register("draw2dimg", &Draw2Dimg{})
 	packages.Register("image", newImage())
 
+	packages.Register("graphFilter", Filter{})
+	packages.Register("graphMapper", Mapper{})
+
 	packages.Register("ffmpeg", &io.FFMPeg{})
 	packages.Register("jpeg", &io.JPEG{})
 	packages.Register("png", &io.PNG{})

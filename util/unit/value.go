@@ -31,10 +31,10 @@
 package unit
 
 import (
-	"git.area51.dev/peter/videoident/util"
-	"git.area51.dev/peter/videoident/util/font"
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
+	"github.com/peter-mount/go-anim/util"
+	"github.com/peter-mount/go-anim/util/font"
 	"golang.org/x/image/math/fixed"
 	"math"
 	"strconv"

@@ -3,7 +3,7 @@ package renderer
 import (
 	"errors"
 	"github.com/llgcode/draw2d/draw2dimg"
-	graph "github.com/peter-mount/go-graphics"
+	"github.com/peter-mount/go-anim/graph"
 )
 
 func CloneContext(ctx Context) Context {

@@ -2,8 +2,8 @@ package unit
 
 import (
 	"fmt"
-	"git.area51.dev/peter/videoident/util"
 	"github.com/llgcode/draw2d/draw2dimg"
+	"github.com/peter-mount/go-anim/util"
 	"strings"
 )
 
