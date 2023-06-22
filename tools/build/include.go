@@ -1,8 +1,9 @@
-package dataencoder
+package build
 
 import (
+	"github.com/peter-mount/go-build/core"
+	"github.com/peter-mount/go-build/tools/build"
 	"github.com/peter-mount/go-kernel/v2/util/walk"
-	"github.com/peter-mount/go-script/tools/dataencoder"
 	"io"
 	"os"
 	"path/filepath"
@@ -11,9 +12,9 @@ import (
 
 // Include copies the include directory to the distribution
 type Include struct {
-	Encoder *dataencoder.Encoder `kernel:"inject"`
-	Build   *dataencoder.Build   `kernel:"inject"`
-	Source  *string              `kernel:"flag,include,install includes"`
+	Encoder *core.Encoder `kernel:"inject"`
+	Build   *build.Build  `kernel:"inject"`
+	Source  *string       `kernel:"flag,include,install includes"`
 }
 
 func (s *Include) Start() error {
