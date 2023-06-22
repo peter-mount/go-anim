@@ -30,7 +30,7 @@ func (s *Include) Start() error {
 }
 
 func (s *Include) includeInclude(dest string) (string, []string) {
-	return filepath.Join(dest, "demo"), []string{"-include", "include"}
+	return filepath.Join(dest, "include"), []string{"-include", "include"}
 }
 
 func (s *Include) includeDemo(dest string) (string, []string) {
