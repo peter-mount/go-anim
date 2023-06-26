@@ -1,4 +1,4 @@
-package build
+package font
 
 import (
 	"archive/zip"
