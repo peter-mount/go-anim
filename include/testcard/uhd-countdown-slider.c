@@ -32,6 +32,11 @@ testCardUHD_Slicer_Upper(ctx, s) {
         second := math.Modf( math.Float(s.frameNumber) / frameRate )
 		sz := second[1]
 
+        // Because 1 frame is blank adjust sz so that frame (frameRate-1) is 100% rather than just under.
+        // This means that on frame (frameRate-1) the slicer is full and on frame (frameRate) it is then blank.
+        // Without this you would never see a full slicer
+		sz = ( sz * frameRate) / (frameRate-1)
+
         animGraphic.FillRectangle(gc,
 			s.dW+(6.4*s.dx), s.dH+(0.8*s.dy),
 			2.2*s.dx, s.dy*0.4,
