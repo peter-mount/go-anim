@@ -7,7 +7,7 @@ require (
 	github.com/llgcode/draw2d v0.0.0-20210904075650-80aa0a2a901d
 	github.com/peter-mount/go-build v0.0.0-20230623201325-1516bc503887
 	github.com/peter-mount/go-kernel/v2 v2.0.3-0.20230622193345-c3b500bdaa5b
-	github.com/peter-mount/go-script v0.0.0-20230623201902-504bc3884bf7
+	github.com/peter-mount/go-script v0.0.0-20230625162050-442438a2fb1d
 	golang.org/x/image v0.8.0
 )
 
