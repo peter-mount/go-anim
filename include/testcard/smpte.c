@@ -68,4 +68,8 @@ main() {
     try( f:=os.Create("/home/peter/test.png") ) {
         png.Encode(f,ctx.Image())
     }
+
+    try( f:=os.Create("/home/peter/test.tiff") ) {
+        tiff.Encode(f,ctx.Image())
+    }
 }

@@ -28,7 +28,8 @@ main() {
     // create a context with start, end frame numbers, the frame rate and the duration
     ctx:= animGraphic.NewContext()
 
-    try( encoder := ffmpeg.New( "test.mp4", frameRate ) ) {
+    //try( encoder := ffmpeg.Raw( "test.mp4", frameRate, ctx.Image() ) ) {
+    try( encoder := ffmpeg.NewJpg( "test.mp4", frameRate, ctx.Image() ) ) {
         // here we use sec as the main loop
         for sec:=startTime; sec>=0; sec=sec-1 {
             // Clear the frame to all black
@@ -37,14 +38,11 @@ main() {
             // Draw the clock
             demoCountdown(ctx, sec)
 
-            // Render the image to a buffer
-            frame := png.EncodeBytes( ctx.Image() )
-
             // Now render it frameRate times.
             // this time we use Write() instead of WriteImage()
             // as frame has already been encoded
             for i:=0; i<frameRate; i=i+1 {
-                encoder.Write(frame)
+                encoder.WriteImage(ctx.Image())
             }
         }
     }
