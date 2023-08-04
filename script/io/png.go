@@ -28,3 +28,7 @@ func (_ PNG) EncodeBytes(img image.Image) ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+func (_ PNG) EncodeFFMPEG(img image.Image) ([]string, error) {
+	return nil, nil
+}

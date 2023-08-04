@@ -1,7 +1,6 @@
 package io
 
 import (
-	"errors"
 	"fmt"
 	"github.com/peter-mount/go-kernel/v2/log"
 	"image"
@@ -17,11 +16,18 @@ type FFMPeg struct{}
 
 // FFMPegSession handles sending frames to FFMPeg
 type FFMPegSession struct {
-	encoder Encoder               // The image encoder
-	cmd     *exec.Cmd             // The ffmpeg command
-	r       *io.PipeReader        // stdin to ffmpeg
-	w       *io.PipeWriter        // writer to send images to ffmpeg
-	pool    png.EncoderBufferPool // pool of buffers to save on memory allocations
+	fileName  string                // Output fileName
+	frameRate int                   // frameRate
+	encoder   FFMPegSessionSource   // The image encoder
+	cmd       *exec.Cmd             // The ffmpeg command
+	r         *io.PipeReader        // stdin to ffmpeg
+	w         *io.PipeWriter        // writer to send images to ffmpeg
+	pool      png.EncoderBufferPool // pool of buffers to save on memory allocations
+}
+
+type FFMPegSessionSource interface {
+	Encoder
+	EncodeFFMPEG(img image.Image) ([]string, error)
 }
 
 type bufferPool struct {
@@ -49,18 +55,21 @@ func (b *bufferPool) Put(e *png.EncoderBuffer) {
 	b.pool = append(b.pool, e)
 }
 
-func (_ FFMPeg) new(fileName string, frameRate int, srcArgs []string, encoder Encoder) (*FFMPegSession, error) {
-	session := &FFMPegSession{
-		pool:    &bufferPool{},
-		encoder: encoder,
+func (_ FFMPeg) new(fileName string, frameRate int, encoder FFMPegSessionSource) *FFMPegSession {
+	return &FFMPegSession{
+		pool:      &bufferPool{},
+		fileName:  fileName,
+		frameRate: frameRate,
+		encoder:   encoder,
 	}
+}
 
-	frameRateS := strconv.Itoa(frameRate)
+func (s *FFMPegSession) init(img image.Image) error {
+	frameRateS := strconv.Itoa(s.frameRate)
 
-	var args []string
-
-	if len(srcArgs) > 0 {
-		args = append(args, srcArgs...)
+	args, err := s.encoder.EncodeFFMPEG(img)
+	if err != nil {
+		return err
 	}
 
 	args = append(args,
@@ -75,57 +84,48 @@ func (_ FFMPeg) new(fileName string, frameRate int, srcArgs []string, encoder En
 		"-pix_fmt", "yuv420p",
 	)
 
-	args = append(args, fileName)
+	args = append(args, s.fileName)
 
-	session.cmd = exec.Command("ffmpeg", args...)
+	s.cmd = exec.Command("ffmpeg", args...)
 
-	session.r, session.w = io.Pipe()
+	s.r, s.w = io.Pipe()
 
-	session.cmd.Stdin = session.r
+	s.cmd.Stdin = s.r
 
 	if log.IsVerbose() {
-		session.cmd.Stdout, session.cmd.Stderr = os.Stdout, os.Stderr
+		s.cmd.Stdout, s.cmd.Stderr = os.Stdout, os.Stderr
 	}
 
-	return session, session.cmd.Start()
+	return s.cmd.Start()
 }
 
+// New creates a new FFMPegSession. The default is to use raw frame formatting
+func (f FFMPeg) New(fileName string, frameRate int) (*FFMPegSession, error) {
+	return f.NewRaw(fileName, frameRate)
+}
+
+// NewJpg creates a new FFMPegSession using JPG as the frame format
 func (f FFMPeg) NewJpg(fileName string, frameRate int) (*FFMPegSession, error) {
-	return f.new(fileName, frameRate, nil, &JPEG{})
+	return f.new(fileName, frameRate, &JPEG{}), nil
 }
 
-// NewPng creates a new FFMPegSession or an error if ffmpeg could not be started.
+// NewPng creates a new FFMPegSession using PNG as the frame format
 func (f FFMPeg) NewPng(fileName string, frameRate int) (*FFMPegSession, error) {
-	return f.new(fileName, frameRate, nil, &PNG{})
+	return f.new(fileName, frameRate, &PNG{}), nil
 }
 
-func (f FFMPeg) NewRaw(fileName string, frameRate int, src image.Image) (*FFMPegSession, error) {
-	var args []string
-
-	if src == nil {
-		return nil, errors.New("image required for raw")
-	}
-
-	b := src.Bounds()
-	args = append(args,
-		"-f", "rawvideo",
-		"-s", fmt.Sprintf("%dx%d", b.Dx(), b.Dy()),
-	)
-
-	if _, ok := src.(*image.RGBA); ok {
-		args = append(args, "-pix_fmt", "rgba")
-	} else if _, ok := src.(*image.RGBA64); ok {
-		args = append(args, "-pix_fmt", "rgba64")
-	} else {
-		return nil, fmt.Errorf("unsupported raw image format %T", src)
-	}
-
-	return f.new(fileName, frameRate, args, &Raw{})
+// NewRaw creates a new FFMPegSession using the raw image format of the first frame
+func (f FFMPeg) NewRaw(fileName string, frameRate int) (*FFMPegSession, error) {
+	return f.new(fileName, frameRate, &Raw{}), nil
 }
 
 // Close closes the FFMPegSession.
 // Normally this is handled by try-resources
 func (s *FFMPegSession) Close() error {
+	if s.w == nil {
+		return nil
+	}
+
 	if err := s.w.Close(); err != nil {
 		fmt.Println("Error closing ffmpeg stream", err)
 		_ = s.cmd.Process.Kill()
@@ -138,11 +138,22 @@ func (s *FFMPegSession) Close() error {
 // Normally this will be a pre-encoded image - e.g. when a frame is used
 // multiple times, only render it once
 func (s *FFMPegSession) Write(b []byte) (int, error) {
+	if s.cmd == nil {
+		if err := s.init(nil); err != nil {
+			return 0, err
+		}
+	}
 	return s.w.Write(b)
 }
 
 // WriteImage writes an image to ffmpeg.
 func (s *FFMPegSession) WriteImage(img image.Image) error {
+	if s.cmd == nil {
+		if err := s.init(img); err != nil {
+			return err
+		}
+	}
+
 	b, err := s.encoder.EncodeBytes(img)
 
 	if err == nil {

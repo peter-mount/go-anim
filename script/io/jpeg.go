@@ -29,3 +29,7 @@ func (_ JPEG) EncodeBytes(img image.Image) ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+func (_ JPEG) EncodeFFMPEG(img image.Image) ([]string, error) {
+	return nil, nil
+}

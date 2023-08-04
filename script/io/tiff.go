@@ -28,3 +28,7 @@ func (_ TIFF) EncodeBytes(img image.Image) ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+func (_ TIFF) EncodeFFMPEG(img image.Image) ([]string, error) {
+	return nil, nil
+}
