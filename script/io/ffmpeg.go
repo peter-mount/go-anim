@@ -2,6 +2,7 @@ package io
 
 import (
 	"fmt"
+	"github.com/peter-mount/go-anim/script/util"
 	"github.com/peter-mount/go-kernel/v2/log"
 	"image"
 	"image/png"
@@ -16,13 +17,13 @@ type FFMPeg struct{}
 
 // FFMPegSession handles sending frames to FFMPeg
 type FFMPegSession struct {
-	fileName  string                // Output fileName
-	frameRate int                   // frameRate
-	encoder   FFMPegSessionSource   // The image encoder
-	cmd       *exec.Cmd             // The ffmpeg command
-	r         *io.PipeReader        // stdin to ffmpeg
-	w         *io.PipeWriter        // writer to send images to ffmpeg
-	pool      png.EncoderBufferPool // pool of buffers to save on memory allocations
+	fileName string                // Output fileName
+	timeCode *util.TimeCode        // TimeCode
+	encoder  FFMPegSessionSource   // The image encoder
+	cmd      *exec.Cmd             // The ffmpeg command
+	r        *io.PipeReader        // stdin to ffmpeg
+	w        *io.PipeWriter        // writer to send images to ffmpeg
+	pool     png.EncoderBufferPool // pool of buffers to save on memory allocations
 }
 
 type FFMPegSessionSource interface {
@@ -57,34 +58,38 @@ func (b *bufferPool) Put(e *png.EncoderBuffer) {
 
 func (_ FFMPeg) new(fileName string, frameRate int, encoder FFMPegSessionSource) *FFMPegSession {
 	return &FFMPegSession{
-		pool:      &bufferPool{},
-		fileName:  fileName,
-		frameRate: frameRate,
-		encoder:   encoder,
+		pool:     &bufferPool{},
+		fileName: fileName,
+		encoder:  encoder,
+		timeCode: util.NewTimeCode(frameRate),
 	}
 }
 
 func (s *FFMPegSession) init(img image.Image) error {
-	frameRateS := strconv.Itoa(s.frameRate)
 
+	// Get initial source parameters from the encoder, may be nil if none required
 	args, err := s.encoder.EncodeFFMPEG(img)
 	if err != nil {
 		return err
 	}
 
-	args = append(args,
-		"-y",
-		"-framerate", frameRateS,
-		"-i", "-", // pipe from stdin
-	)
+	frameRateS := strconv.Itoa(s.TimeCode().FrameRate())
 
 	args = append(args,
+		// Required source parameters
+		"-y",
+		"-framerate", frameRateS,
+		// pipe from stdin
+		"-i", "-",
+		// Always provide the start time code
+		"-timecode", s.TimeCode().StartTimeCode(),
+		// Now the destination parameters
 		"-r", frameRateS,
 		"-c:v", "libx264",
 		"-pix_fmt", "yuv420p",
+		// Destination file name
+		s.fileName,
 	)
-
-	args = append(args, s.fileName)
 
 	s.cmd = exec.Command("ffmpeg", args...)
 
@@ -138,16 +143,23 @@ func (s *FFMPegSession) Close() error {
 // Normally this will be a pre-encoded image - e.g. when a frame is used
 // multiple times, only render it once
 func (s *FFMPegSession) Write(b []byte) (int, error) {
+	// Lazy init ffmpeg, passing nil. If the encoder requires an image it should fail
 	if s.cmd == nil {
 		if err := s.init(nil); err != nil {
 			return 0, err
 		}
 	}
-	return s.w.Write(b)
+
+	n, err := s.w.Write(b)
+	if err == nil {
+		s.TimeCode().Next()
+	}
+	return n, err
 }
 
 // WriteImage writes an image to ffmpeg.
 func (s *FFMPegSession) WriteImage(img image.Image) error {
+	// Lazy init ffmpeg passing the image
 	if s.cmd == nil {
 		if err := s.init(img); err != nil {
 			return err
@@ -157,6 +169,7 @@ func (s *FFMPegSession) WriteImage(img image.Image) error {
 	b, err := s.encoder.EncodeBytes(img)
 
 	if err == nil {
+		// Call our write so we increment the TimeCode
 		_, err = s.Write(b)
 	}
 
@@ -165,4 +178,8 @@ func (s *FFMPegSession) WriteImage(img image.Image) error {
 
 func (s *FFMPegSession) EncodeBytes(img image.Image) ([]byte, error) {
 	return s.encoder.EncodeBytes(img)
+}
+
+func (s *FFMPegSession) TimeCode() *util.TimeCode {
+	return s.timeCode
 }
