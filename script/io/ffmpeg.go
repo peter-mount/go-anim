@@ -66,7 +66,8 @@ func (_ FFMPeg) new(fileName string, frameRate int, srcArgs []string, raw bool) 
 	args = append(args,
 		"-y",
 		"-framerate", frameRateS,
-		"-i", "-", // pipe from stdin
+		//"-i", "-", // pipe from stdin
+		"-i", "pipe:.tiff",
 	)
 
 	args = append(args,

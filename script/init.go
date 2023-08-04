@@ -18,4 +18,5 @@ func init() {
 	packages.Register("ffmpeg", &io.FFMPeg{})
 	packages.Register("jpeg", &io.JPEG{})
 	packages.Register("png", &io.PNG{})
+	packages.Register("tiff", &io.TIFF{})
 }
