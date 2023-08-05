@@ -7,18 +7,30 @@ import (
 	"strings"
 )
 
-// TimeCode handles the management of Timecodes
+// TimeCode handles the management of Timecodes during an animation
 type TimeCode struct {
-	frameNum   int // The overall frame number
-	startSec   int // The time code in seconds since 00:00:00:ff of the start
-	startFrame int // The initial frame number at the start, usually 0
-	sec        int // The current time code
-	frameSec   int // Frame within the current second
-	frameRate  int // Frame Rate
+	frameNum int              // The overall frame number
+	start    TimeCodeFragment // Start TimeCode
+	current  TimeCodeFragment // TimeCode of the current frame
 }
 
+const (
+	// The initial frameNum = 1 as it's the index used in filenames
+	tcStartFrameNum = 1
+)
+
+// NewTimeCode creates a TimeCode with the specified frame rate
 func NewTimeCode(frameRate int) *TimeCode {
-	return &TimeCode{frameNum: 1, frameRate: frameRate}
+	return &TimeCode{
+		frameNum: tcStartFrameNum,
+		start:    TimeCodeFragment{frameRate: frameRate},
+		current:  TimeCodeFragment{frameRate: frameRate},
+	}
+}
+
+// FrameRate returns the frame rate of the clip
+func (tc *TimeCode) FrameRate() int {
+	return tc.start.frameRate
 }
 
 // FrameNum is the overall frame number, starting at 1.
@@ -27,51 +39,29 @@ func (tc *TimeCode) FrameNum() int {
 	return tc.frameNum
 }
 
-// Sec returns the current whole second within the clip since 00:00:00
-func (tc *TimeCode) Sec() int {
-	return tc.sec
+// StartTimeCode returns the time code of the first frame
+func (tc *TimeCode) StartTimeCode() TimeCodeFragment {
+	return tc.start
 }
 
-// StartSec returns the starting whole second since 00:00:00 for the clip.
-func (tc *TimeCode) StartSec() int {
-	return tc.startSec
-}
-
-// FrameSec returns the frame within the current second
-func (tc *TimeCode) FrameSec() int {
-	return tc.frameSec
-}
-
-// FrameRate returns the frame rate of the clip
-func (tc *TimeCode) FrameRate() int {
-	return tc.frameRate
-}
-
-// StartTimeCode returns the start time code as "hh:mm:ss:ff"
-func (tc *TimeCode) StartTimeCode() string {
-	return tc.timeCode(tc.startSec, tc.startFrame)
-}
-
-// TimeCode returns the current time code as "hh:mm:ss:ff"
-func (tc *TimeCode) TimeCode() string {
-	return tc.timeCode(tc.sec, tc.frameSec)
-}
-
-func (tc *TimeCode) timeCode(sec, frame int) string {
-	m := sec / 60
-	h := m / 60
-	return fmt.Sprintf("%02d:%02d:%02d:%02d", h%24, m%60, sec%60, frame%tc.frameRate)
+// TimeCode returns the time code for the current frame
+func (tc *TimeCode) TimeCode() TimeCodeFragment {
+	return tc.current
 }
 
 // Next moves the TimeCode to the next frame.
 func (tc *TimeCode) Next() {
-	tc.frameSec++
-	if tc.frameSec >= tc.frameRate {
-		tc.frameSec = 0
-		tc.sec++
+	// Next frame serial
+	tc.frameNum++
 
-		if tc.sec >= 86400 {
-			tc.sec = 0
+	// Don't optimise caching tc.current as it's not a pointer
+	tc.current.frame++
+	if tc.current.frame >= tc.current.frameRate {
+		tc.current.frame = 0
+		tc.current.sec++
+
+		if tc.current.sec >= 86400 {
+			tc.current.sec = 0
 		}
 	}
 }
@@ -81,9 +71,10 @@ func (tc *TimeCode) Next() {
 //
 // This will return an error if the TimeCode has been used for a frame, e.g. Next() has been called.
 func (tc *TimeCode) Set(s string) (*TimeCode, error) {
-	if tc.frameNum > 1 {
+	if tc.IsRunning() {
 		return nil, errors.New("cannot Set a running TimeCode")
 	}
+
 	a := strings.Split(s, ":")
 
 	l := len(a)
@@ -91,6 +82,7 @@ func (tc *TimeCode) Set(s string) (*TimeCode, error) {
 	// Allow either "hh:mm:ss" or "hh:mm:ss:ff". For the shorter, ff=0
 	valid := l == 3 || l == 4
 
+	// Parse each field as an int, testing for bounds
 	var v []int
 	for i := 0; i < l && valid; i++ {
 		n, err := strconv.Atoi(a[i])
@@ -101,7 +93,7 @@ func (tc *TimeCode) Set(s string) (*TimeCode, error) {
 		case 1, 2:
 			valid = valid && n < 60
 		case 3:
-			valid = valid && n < tc.frameRate
+			valid = valid && n < tc.FrameRate()
 		}
 		if valid {
 			v = append(v, n)
@@ -109,7 +101,7 @@ func (tc *TimeCode) Set(s string) (*TimeCode, error) {
 	}
 
 	if !valid {
-		return nil, fmt.Errorf("invalid timecode %q must be hh:mm:ss or hh:mm:ss:00", s)
+		return nil, fmt.Errorf("invalid timecode %q must be hh:mm:ss or hh:mm:ss:ff", s)
 	}
 
 	// If short form, set start frame to 0
@@ -117,15 +109,83 @@ func (tc *TimeCode) Set(s string) (*TimeCode, error) {
 		v = append(v, 0)
 	}
 
-	tc.startSec = (((v[0] * 60) + v[1]) * 60) + v[2]
-	tc.startFrame = v[3]
+	tc.start.sec = (((v[0] * 60) + v[1]) * 60) + v[2]
+	tc.start.frame = v[3]
 
-	tc.sec, tc.frameSec = tc.startSec, tc.startFrame
+	tc.current = tc.start
 
 	return tc, nil
 }
 
 // IsRunning returns true if the TimeCode is running. Specifically once a frame has been rendered it is running.
 func (tc *TimeCode) IsRunning() bool {
-	return tc.frameNum > 1
+	return tc.frameNum > tcStartFrameNum
+}
+
+type TimeCodeFragment struct {
+	sec       int // The current time code
+	frame     int // Frame within the current second
+	frameRate int // Frame Rate
+}
+
+func (tc TimeCodeFragment) TimeCode() string {
+	return fmt.Sprintf("%02d:%02d:%02d:%02d", tc.Hour(), tc.Minute(), tc.Second(), tc.Frame())
+}
+
+// FrameRate of the clip
+func (tc TimeCodeFragment) FrameRate() int {
+	return tc.frameRate
+}
+
+// Offset returns the number of seconds since "00:00:00" for the clip
+func (tc TimeCodeFragment) Offset() int {
+	return tc.sec
+}
+
+// Hour returns the hour component as an int
+func (tc TimeCodeFragment) Hour() int {
+	return (tc.sec / 3600) % 24
+}
+
+// Minute returns the minute component as an int
+func (tc TimeCodeFragment) Minute() int {
+	return (tc.sec / 60) % 60
+}
+
+// Second returns the second component as an int
+func (tc TimeCodeFragment) Second() int {
+	return tc.sec % 60
+}
+
+// HourS returns the hour component as a 2 digit string, useful in rendering
+func (tc TimeCodeFragment) HourS() string {
+	return tc.digit(tc.Hour())
+}
+
+// MinuteS returns the minute component as a 2 digit string, useful in rendering
+func (tc TimeCodeFragment) MinuteS() string {
+	return tc.digit(tc.Minute())
+}
+
+// SecondS returns the second component as a 2 digit string, useful in rendering
+func (tc TimeCodeFragment) SecondS() string {
+	return tc.digit(tc.Second())
+}
+
+// Frame returns the frame within the current second
+func (tc TimeCodeFragment) Frame() int {
+	return tc.frame
+}
+
+// FrameS returns the frame component as a 2 digit string, useful in rendering
+func (tc TimeCodeFragment) FrameS() string {
+	return tc.digit(tc.Frame())
+}
+
+func (tc TimeCodeFragment) digit(n int) string {
+	s := strconv.Itoa(n)
+	if len(s) == 1 {
+		s = "0" + s
+	}
+	return s
 }

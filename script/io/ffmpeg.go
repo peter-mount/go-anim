@@ -82,7 +82,7 @@ func (s *FFMPegSession) init(img image.Image) error {
 		// pipe from stdin
 		"-i", "-",
 		// Always provide the start time code
-		"-timecode", s.TimeCode().StartTimeCode(),
+		"-timecode", s.TimeCode().StartTimeCode().TimeCode(),
 		// Now the destination parameters
 		"-r", frameRateS,
 		"-c:v", "libx264",
