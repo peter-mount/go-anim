@@ -5,25 +5,22 @@ import (
 	"github.com/peter-mount/go-anim/script/util"
 	"github.com/peter-mount/go-kernel/v2/log"
 	"image"
-	"image/png"
 	"io"
 	"os"
 	"os/exec"
 	"strconv"
-	"sync"
 )
 
 type FFMPeg struct{}
 
 // FFMPegSession handles sending frames to FFMPeg
 type FFMPegSession struct {
-	fileName string                // Output fileName
-	timeCode *util.TimeCode        // TimeCode
-	encoder  FFMPegSessionSource   // The image encoder
-	cmd      *exec.Cmd             // The ffmpeg command
-	r        *io.PipeReader        // stdin to ffmpeg
-	w        *io.PipeWriter        // writer to send images to ffmpeg
-	pool     png.EncoderBufferPool // pool of buffers to save on memory allocations
+	fileName string              // Output fileName
+	timeCode *util.TimeCode      // TimeCode
+	encoder  FFMPegSessionSource // The image encoder
+	cmd      *exec.Cmd           // The ffmpeg command
+	r        *io.PipeReader      // stdin to ffmpeg
+	w        *io.PipeWriter      // writer to send images to ffmpeg
 }
 
 type FFMPegSessionSource interface {
@@ -31,34 +28,8 @@ type FFMPegSessionSource interface {
 	EncodeFFMPEG(img image.Image) ([]string, error)
 }
 
-type bufferPool struct {
-	mutex sync.Mutex
-	pool  []*png.EncoderBuffer
-}
-
-func (b *bufferPool) Get() *png.EncoderBuffer {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	if len(b.pool) < 1 {
-		return nil
-	}
-
-	e := b.pool[0]
-	b.pool = b.pool[1:]
-	return e
-}
-
-func (b *bufferPool) Put(e *png.EncoderBuffer) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	b.pool = append(b.pool, e)
-}
-
 func (_ FFMPeg) new(fileName string, frameRate int, encoder FFMPegSessionSource) *FFMPegSession {
 	return &FFMPegSession{
-		pool:     &bufferPool{},
 		fileName: fileName,
 		encoder:  encoder,
 		timeCode: util.NewTimeCode(frameRate),
@@ -159,6 +130,15 @@ func (s *FFMPegSession) Write(b []byte) (int, error) {
 
 // WriteImage writes an image to ffmpeg.
 func (s *FFMPegSession) WriteImage(img image.Image) error {
+	return s.WriteImageMulti(img, 1)
+}
+
+// WriteImageMulti writes an image to ffmpeg multiple times
+func (s *FFMPegSession) WriteImageMulti(img image.Image, num int) error {
+	if num < 1 {
+		return fmt.Errorf("cannot write %d images, must be >=1", num)
+	}
+
 	// Lazy init ffmpeg passing the image
 	if s.cmd == nil {
 		if err := s.init(img); err != nil {
@@ -166,9 +146,11 @@ func (s *FFMPegSession) WriteImage(img image.Image) error {
 		}
 	}
 
+	// Encode the frame
 	b, err := s.encoder.EncodeBytes(img)
 
-	if err == nil {
+	// Write num copies of the frame
+	for n := 0; n < num && err == nil; n++ {
 		// Call our write so we increment the TimeCode
 		_, err = s.Write(b)
 	}

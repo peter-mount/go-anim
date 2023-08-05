@@ -7,6 +7,9 @@ import (
 	"io"
 )
 
+// Raw package handles raw images.
+// Currently, RGBA and RGBA64 are supported as those are the most common and the way
+// they are stored in memory is directly supported by ffmpeg.
 type Raw struct{}
 
 func (r Raw) Encode(w io.Writer, img image.Image) error {
@@ -26,6 +29,11 @@ func (r Raw) EncodeBytes(img image.Image) ([]byte, error) {
 	if src, ok := img.(*image.RGBA); ok {
 		return src.Pix, nil
 	}
+
+	if src, ok := img.(*image.RGBA64); ok {
+		return src.Pix, nil
+	}
+
 	return nil, fmt.Errorf("unsupported image %T", img)
 }
 

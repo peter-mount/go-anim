@@ -38,11 +38,9 @@ main() {
             demoCountdown(ctx, sec)
 
             // Now render it frameRate times.
-            // this time we use Write() instead of WriteImage()
-            // as frame has already been encoded
-            for i:=0; i<frameRate; i=i+1 {
-                encoder.WriteImage(ctx.Image())
-            }
+            // This works because we only change the scene once every second.
+            // Using WriteImageMulti is better than a for loop as it's faster
+            encoder.WriteImageMulti(ctx.Image(),frameRate)
         }
     }
 
