@@ -28,7 +28,7 @@ main() {
     // create a context with start, end frame numbers, the frame rate and the duration
     ctx:= animGraphic.NewContext()
 
-    try( encoder := ffmpeg.New( "test.mp4", frameRate ) ) {
+    try( encoder := render.New( "test.mp4", frameRate ) ) {
         // here we use sec as the main loop
         for sec:=startTime; sec>=0; sec=sec-1 {
             // Clear the frame to all black

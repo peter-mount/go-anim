@@ -15,9 +15,5 @@ func init() {
 	packages.Register("graphFilter", Filter{})
 	packages.Register("graphMapper", Mapper{})
 
-	packages.Register("ffmpeg", &io.FFMPeg{})
-	packages.Register("jpeg", &io.JPEG{})
-	packages.Register("png", &io.PNG{})
-	packages.Register("tiff", &io.TIFF{})
-	packages.Register("rawimage", &io.Raw{})
+	packages.Register("render", &io.Render{})
 }
