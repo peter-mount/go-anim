@@ -29,6 +29,7 @@ main() {
     ctx:= animGraphic.NewContext()
 
     try( encoder := render.New( "test.mp4", frameRate ) ) {
+        encoder.TimeCode().Set("09:25:30")
         // here we use sec as the main loop
         for sec:=startTime; sec>=0; sec=sec-1 {
             // Clear the frame to all black
@@ -40,7 +41,7 @@ main() {
             // Now render it frameRate times.
             // This works because we only change the scene once every second.
             // Using WriteImageMulti is better than a for loop as it's faster
-            encoder.WriteImageMulti(ctx.Image(),frameRate)
+            encoder.WriteImageN(ctx.Image(),frameRate)
         }
     }
 

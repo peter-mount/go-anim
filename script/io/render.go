@@ -64,11 +64,11 @@ func (s *RenderStreamBase) WriteBytes(b []byte) (int, error) {
 
 // WriteImage writes an image to ffmpeg.
 func (s *RenderStreamBase) WriteImage(img image.Image) error {
-	return s.WriteImageMulti(img, 1)
+	return s.WriteImageN(img, 1)
 }
 
-// WriteImageMulti writes an image to ffmpeg multiple times
-func (s *RenderStreamBase) WriteImageMulti(img image.Image, num int) error {
+// WriteImageN writes an image to ffmpeg multiple times
+func (s *RenderStreamBase) WriteImageN(img image.Image, num int) error {
 	if num < 1 {
 		return fmt.Errorf("cannot write %d images, must be >=1", num)
 	}

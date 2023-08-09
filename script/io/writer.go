@@ -12,5 +12,5 @@ type Writer interface {
 	// WriteImage writes the image as a frame
 	WriteImage(img image.Image) error
 	// WriteImageMulti writes the image as num frames
-	WriteImageMulti(img image.Image, num int) error
+	WriteImageN(img image.Image, num int) error
 }
