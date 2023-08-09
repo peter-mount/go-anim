@@ -3,30 +3,102 @@ package io
 import (
 	"fmt"
 	"github.com/peter-mount/go-anim/script/util"
+	"github.com/peter-mount/go-script/packages"
 	"image"
-	"path/filepath"
+	"strings"
 )
 
-type Render struct{}
+func init() {
+	r := &Render{}
+
+	// Populate the extensions.
+	// This is first come, first served so ensure that the longer
+	// variants are first, e.g. .raw.mp4 is before .mp4
+	r.renderers = []rendererHandler{
+		// .mp4 frame types
+		{suffix: ".raw.mp4", handler: r.newRawMp4},
+		{suffix: ".png.mp4", handler: r.newPngMp4},
+		{suffix: ".jpg.mp4", handler: r.newJpegMp4},
+		{suffix: ".jpeg.mp4", handler: r.newJpegMp4},
+		{suffix: ".tiff.mp4", handler: r.newTiffMp4},
+		{suffix: ".tif.mp4", handler: r.newTiffMp4},
+		// .mp4 default using raw frames
+		{suffix: ".mp4", handler: r.newRawMp4},
+		// directory frame types
+		{suffix: ".png", handler: r.newPng},
+		{suffix: ".jpg", handler: r.newJpeg},
+		{suffix: ".jpeg", handler: r.newJpeg},
+		{suffix: ".tiff", handler: r.newTiff},
+		{suffix: ".tif", handler: r.newTiff},
+		// tar frame types
+		{suffix: ".png.tar", handler: r.newPngTar},
+		{suffix: ".jpg.tar", handler: r.newJpegTar},
+		{suffix: ".jpeg.tar", handler: r.newJpegTar},
+		{suffix: ".tiff.tar", handler: r.newTiffTar},
+		{suffix: ".tif.tar", handler: r.newTiffTar},
+		// tar default using png frames
+		{suffix: ".tar", handler: r.newPngTar},
+	}
+
+	packages.Register("render", r)
+}
+
+type Render struct {
+	renderers []rendererHandler
+}
+type rendererHandler struct {
+	suffix  string
+	handler func(fileName string, frameRate int) RenderStream
+}
 
 func (r Render) New(fileName string, frameRate int) (RenderStream, error) {
-	switch filepath.Ext(fileName) {
-	// mp4 video
-	case ".mp4":
-		return r.ffmpeg(fileName, frameRate, &Raw{}), nil
-
-	case ".png":
-		return r.frames(fileName, frameRate, &PNG{}), nil
-
-	case ".jpg", ".jpeg":
-		return r.frames(fileName, frameRate, &JPEG{}), nil
-
-	case ".tif", ".tiff":
-		return r.frames(fileName, frameRate, &TIFF{}), nil
-
-	default:
-		return nil, fmt.Errorf("unsupported file type %q", fileName)
+	for _, h := range r.renderers {
+		if strings.HasSuffix(fileName, h.suffix) {
+			return h.handler(fileName, frameRate), nil
+		}
 	}
+
+	return nil, fmt.Errorf("unsupported file type %q", fileName)
+}
+
+func (r Render) newRawMp4(fileName string, frameRate int) RenderStream {
+	return r.ffmpeg(fileName, frameRate, &Raw{})
+}
+
+func (r Render) newPngMp4(fileName string, frameRate int) RenderStream {
+	return r.ffmpeg(fileName, frameRate, &PNG{})
+}
+
+func (r Render) newJpegMp4(fileName string, frameRate int) RenderStream {
+	return r.ffmpeg(fileName, frameRate, &JPEG{})
+}
+
+func (r Render) newTiffMp4(fileName string, frameRate int) RenderStream {
+	return r.ffmpeg(fileName, frameRate, &TIFF{})
+}
+
+func (r Render) newPng(fileName string, frameRate int) RenderStream {
+	return r.frames(fileName, frameRate, &PNG{})
+}
+
+func (r Render) newJpeg(fileName string, frameRate int) RenderStream {
+	return r.frames(fileName, frameRate, &JPEG{})
+}
+
+func (r Render) newTiff(fileName string, frameRate int) RenderStream {
+	return r.frames(fileName, frameRate, &TIFF{})
+}
+
+func (r Render) newPngTar(fileName string, frameRate int) RenderStream {
+	return r.tar(fileName, frameRate, &PNG{}, ".png")
+}
+
+func (r Render) newJpegTar(fileName string, frameRate int) RenderStream {
+	return r.tar(fileName, frameRate, &JPEG{}, ".jpg")
+}
+
+func (r Render) newTiffTar(fileName string, frameRate int) RenderStream {
+	return r.tar(fileName, frameRate, &TIFF{}, ".tiff")
 }
 
 type RenderStream interface {

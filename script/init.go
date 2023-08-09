@@ -1,7 +1,7 @@
 package script
 
 import (
-	"github.com/peter-mount/go-anim/script/io"
+	_ "github.com/peter-mount/go-anim/script/io"
 	"github.com/peter-mount/go-script/packages"
 )
 
@@ -15,5 +15,4 @@ func init() {
 	packages.Register("graphFilter", Filter{})
 	packages.Register("graphMapper", Mapper{})
 
-	packages.Register("render", &io.Render{})
 }
