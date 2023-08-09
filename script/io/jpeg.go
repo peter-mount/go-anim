@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"image"
 	"image/jpeg"
-	"image/png"
 	"io"
 )
 
@@ -24,7 +23,7 @@ func (_ JPEG) Encode(w io.Writer, img image.Image) error {
 
 func (_ JPEG) EncodeBytes(img image.Image) ([]byte, error) {
 	var buf bytes.Buffer
-	if err := png.Encode(&buf, img); err != nil {
+	if err := jpeg.Encode(&buf, img, nil); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
