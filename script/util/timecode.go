@@ -30,7 +30,11 @@ func NewTimeCode(frameRate int) *TimeCode {
 
 // FrameRate returns the frame rate of the clip
 func (tc *TimeCode) FrameRate() int {
-	return tc.start.frameRate
+	return tc.start.FrameRate()
+}
+
+func (tc *TimeCode) FrameRateF() float64 {
+	return tc.start.FrameRateF()
 }
 
 // FrameNum is the overall frame number, starting at 1.
@@ -137,6 +141,10 @@ func (tc TimeCodeFragment) FrameRate() int {
 	return tc.frameRate
 }
 
+func (tc TimeCodeFragment) FrameRateF() float64 {
+	return float64(tc.Frame())
+}
+
 // Offset returns the number of seconds since "00:00:00" for the clip
 func (tc TimeCodeFragment) Offset() int {
 	return tc.sec
@@ -155,6 +163,18 @@ func (tc TimeCodeFragment) Minute() int {
 // Second returns the second component as an int
 func (tc TimeCodeFragment) Second() int {
 	return tc.sec % 60
+}
+
+func (tc TimeCodeFragment) HourF() float64 {
+	return float64(tc.Hour())
+}
+
+func (tc TimeCodeFragment) MinuteF() float64 {
+	return float64(tc.Minute())
+}
+
+func (tc TimeCodeFragment) SecondF() float64 {
+	return float64(tc.Second())
 }
 
 // HourS returns the hour component as a 2 digit string, useful in rendering
@@ -177,6 +197,10 @@ func (tc TimeCodeFragment) Frame() int {
 	return tc.frame
 }
 
+func (tc TimeCodeFragment) FrameF() float64 {
+	return float64(tc.Frame())
+}
+
 // FrameS returns the frame component as a 2 digit string, useful in rendering
 func (tc TimeCodeFragment) FrameS() string {
 	return tc.digit(tc.Frame())
@@ -188,4 +212,15 @@ func (tc TimeCodeFragment) digit(n int) string {
 		s = "0" + s
 	}
 	return s
+}
+
+// FramesRemaining returns the number of frames remaining in the current second.
+// This is simply frameRate - frame.
+func (tc TimeCodeFragment) FramesRemaining() int {
+	return tc.FrameRate() - tc.Frame()
+}
+
+// IsStartSecond returns true if the current frame is the first of a whole second.
+func (tc TimeCodeFragment) IsStartSecond() bool {
+	return tc.Frame() == 0
 }

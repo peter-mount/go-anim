@@ -44,7 +44,7 @@ type RenderStreamBase struct {
 	write    func(b []byte) (int, error) // write function
 }
 
-func (s *RenderStreamBase) Init(img image.Image) error {
+func (s *RenderStreamBase) Init(_ image.Image) error {
 	return nil
 }
 
@@ -62,12 +62,12 @@ func (s *RenderStreamBase) WriteBytes(b []byte) (int, error) {
 	return n, err
 }
 
-// WriteImage writes an image to ffmpeg.
+// WriteImage writes an image to the stream.
 func (s *RenderStreamBase) WriteImage(img image.Image) error {
 	return s.WriteImageN(img, 1)
 }
 
-// WriteImageN writes an image to ffmpeg multiple times
+// WriteImageN writes an image to stream multiple times
 func (s *RenderStreamBase) WriteImageN(img image.Image, num int) error {
 	if num < 1 {
 		return fmt.Errorf("cannot write %d images, must be >=1", num)
@@ -97,4 +97,12 @@ func (s *RenderStreamBase) EncodeBytes(img image.Image) ([]byte, error) {
 
 func (s *RenderStreamBase) TimeCode() *util.TimeCode {
 	return s.timeCode
+}
+
+func (s *RenderStreamBase) FrameRate() int {
+	return s.TimeCode().FrameRate()
+}
+
+func (s *RenderStreamBase) FrameRateF() float64 {
+	return s.TimeCode().FrameRateF()
 }
