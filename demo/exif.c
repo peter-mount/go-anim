@@ -42,7 +42,7 @@ main() {
         //
         // Unlike the underlying exif library, this will return an int value
         // for a float tag
-        fmt.Printf("int value %d\n", t.Int(0,"ISOSpeedRatings",-1))
+        fmt.Printf("int value %d\n", t.Int("ISOSpeedRatings",0,-1))
 
         // Get the first float in a tag
         //
@@ -51,6 +51,6 @@ main() {
         //
         // Unlike the underlying exif library, this will return a float value
         // for an int tag
-        fmt.Printf("float value %f\n", t.Float(0,"ISOSpeedRatings",-1.1))
+        fmt.Printf("float value %f\n", t.Float("ISOSpeedRatings",0,-1.1))
     }
-}
+ }

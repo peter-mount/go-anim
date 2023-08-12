@@ -37,21 +37,21 @@ func (t *Tags) Count(n string) int {
 	return 0
 }
 
-func (t *Tags) Rat(i int, n string, d1, d2 int64) (*big.Rat, error) {
+func (t *Tags) Rat(n string, i int, d1, d2 int64) (*big.Rat, error) {
 	if s, exists := t.get(n); exists {
 		return s.Rat(i)
 	}
 	return big.NewRat(d1, d2), nil
 }
 
-func (t *Tags) Rat2(i int, n string, d1, d2 int64) (int64, int64, error) {
+func (t *Tags) Rat2(n string, i int, d1, d2 int64) (int64, int64, error) {
 	if s, exists := t.get(n); exists {
 		return s.Rat2(i)
 	}
 	return d1, d2, nil
 }
 
-func (t *Tags) Int(i int, n string, d int64) (int64, error) {
+func (t *Tags) Int(n string, i int, d int64) (int64, error) {
 	if s, exists := t.get(n); exists {
 		if f, err := s.Int64(i); err == nil {
 			return f, nil
@@ -63,7 +63,7 @@ func (t *Tags) Int(i int, n string, d int64) (int64, error) {
 	return d, nil
 }
 
-func (t *Tags) Float(i int, n string, d float64) (float64, error) {
+func (t *Tags) Float(n string, i int, d float64) (float64, error) {
 	if s, exists := t.get(n); exists {
 		if f, err := s.Float(i); err == nil {
 			return f, nil
@@ -104,4 +104,41 @@ func (_ Exif) Decode(r io.Reader) (*Tags, error) {
 		err = x.Walk(&b)
 	}
 	return (*Tags)(&b), err
+}
+
+func (e Exif) IsError(err error) bool {
+	return e.IsCriticalError(err) || e.IsExifError(err) ||
+		e.IsGPSError(err) || e.IsInteroperabilityError(err) ||
+		e.IsTagNotPresentError(err) || e.IsShortReadTagValueError(err)
+}
+
+// IsCriticalError given the error returned by Decode, reports whether the
+// returned *Exif may contain usable information.
+func (_ Exif) IsCriticalError(err error) bool {
+	return exif.IsCriticalError(err)
+}
+
+// IsExifError reports whether the error happened while decoding the EXIF
+// sub-IFD.
+func (_ Exif) IsExifError(err error) bool {
+	return exif.IsExifError(err)
+}
+
+// IsGPSError reports whether the error happened while decoding the GPS sub-IFD.
+func (_ Exif) IsGPSError(err error) bool {
+	return exif.IsGPSError(err)
+}
+
+// IsInteroperabilityError reports whether the error happened while decoding the
+// Interoperability sub-IFD.
+func (_ Exif) IsInteroperabilityError(err error) bool {
+	return exif.IsInteroperabilityError(err)
+}
+
+func (_ Exif) IsTagNotPresentError(err error) bool {
+	return exif.IsTagNotPresentError(err)
+}
+
+func (_ Exif) IsShortReadTagValueError(err error) bool {
+	return exif.IsShortReadTagValueError(err)
 }
