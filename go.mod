@@ -8,6 +8,7 @@ require (
 	github.com/peter-mount/go-build v0.0.0-20230623201325-1516bc503887
 	github.com/peter-mount/go-kernel/v2 v2.0.3-0.20230622193345-c3b500bdaa5b
 	github.com/peter-mount/go-script v0.0.0-20230625162050-442438a2fb1d
+	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	golang.org/x/image v0.8.0
 )
 

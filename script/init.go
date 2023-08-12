@@ -1,6 +1,7 @@
 package script
 
 import (
+	_ "github.com/peter-mount/go-anim/script/exif"
 	_ "github.com/peter-mount/go-anim/script/io"
 	"github.com/peter-mount/go-script/packages"
 )
