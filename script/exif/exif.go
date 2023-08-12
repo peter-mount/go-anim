@@ -6,7 +6,6 @@ import (
 	"github.com/rwcarlsen/goexif/tiff"
 	"io"
 	"math/big"
-	"strings"
 )
 
 func init() {
@@ -29,6 +28,15 @@ func (t *Tags) get(n string) (*tiff.Tag, bool) {
 	return e, exists
 }
 
+// Count returns the number of values in the named tag.
+// Returns 0 if the tag does not exist, otherwise a positive number
+func (t *Tags) Count(n string) int {
+	if s, exists := t.get(n); exists {
+		return int(s.Count)
+	}
+	return 0
+}
+
 func (t *Tags) Rat(i int, n string, d1, d2 int64) (*big.Rat, error) {
 	if s, exists := t.get(n); exists {
 		return s.Rat(i)
@@ -43,23 +51,40 @@ func (t *Tags) Rat2(i int, n string, d1, d2 int64) (int64, int64, error) {
 	return d1, d2, nil
 }
 
-func (t *Tags) Int(i int, n string, d int) (int, error) {
+func (t *Tags) Int(i int, n string, d int64) (int64, error) {
 	if s, exists := t.get(n); exists {
-		return s.Int(i)
+		if f, err := s.Int64(i); err == nil {
+			return f, nil
+		}
+		if f, err := s.Float(i); err == nil {
+			return int64(f), nil
+		}
 	}
 	return d, nil
 }
 
 func (t *Tags) Float(i int, n string, d float64) (float64, error) {
 	if s, exists := t.get(n); exists {
-		return s.Float(i)
+		if f, err := s.Float(i); err == nil {
+			return f, nil
+		}
+		if f, err := s.Int64(i); err == nil {
+			return float64(f), nil
+		}
 	}
 	return d, nil
 }
 
 func (t *Tags) String(n, d string) string {
 	if s, exists := t.get(n); exists {
-		return strings.Trim(s.String(), "\"")
+		// If the tag is a String then return it directly
+		if s.Format() == tiff.StringVal {
+			str, _ := s.StringVal()
+			return str
+		}
+
+		// Default to String which will convert int/float/rat to a string for us
+		return s.String()
 	}
 	return d
 }
