@@ -39,6 +39,10 @@ type Context interface {
 	FilterBounds(f graph.Filter, b image.Rectangle) error
 	Map(m graph.Mapper) error
 	MapBounds(m graph.Mapper, b image.Rectangle) error
+
+	Rotate(angle float64) Context
+	Translate(tx, ty float64) Context
+	Scale(sx, sy float64) Context
 }
 
 type Drawable interface {
