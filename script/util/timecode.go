@@ -1,8 +1,10 @@
 package util
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 )
@@ -223,4 +225,47 @@ func (tc TimeCodeFragment) FramesRemaining() int {
 // IsStartSecond returns true if the current frame is the first of a whole second.
 func (tc TimeCodeFragment) IsStartSecond() bool {
 	return tc.Frame() == 0
+}
+
+func (tc TimeCode) Write(w io.Writer) error {
+	err := binary.Write(w, binary.BigEndian, tc.frameNum)
+	if err == nil {
+		err = tc.start.Write(w)
+	}
+	return err
+}
+
+func ReadTimeCode(r io.Reader) (TimeCode, error) {
+	var tc TimeCode
+	err := binary.Read(r, binary.BigEndian, &tc.frameNum)
+	if err == nil {
+		tc.start, err = ReadTimeCodeFragment(r)
+	}
+	if err == nil {
+		tc.current = tc.start
+	}
+	return tc, err
+}
+
+func (tc *TimeCodeFragment) Write(w io.Writer) error {
+	err := binary.Write(w, binary.BigEndian, tc.sec)
+	if err == nil {
+		err = binary.Write(w, binary.BigEndian, tc.frame)
+	}
+	if err == nil {
+		err = binary.Write(w, binary.BigEndian, tc.frameRate)
+	}
+	return err
+}
+
+func ReadTimeCodeFragment(r io.Reader) (TimeCodeFragment, error) {
+	var tc TimeCodeFragment
+	err := binary.Read(r, binary.BigEndian, &tc.sec)
+	if err == nil {
+		err = binary.Read(r, binary.BigEndian, &tc.frame)
+	}
+	if err == nil {
+		err = binary.Read(r, binary.BigEndian, &tc.frameRate)
+	}
+	return tc, err
 }
