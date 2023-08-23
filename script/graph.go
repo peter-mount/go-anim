@@ -6,21 +6,26 @@ import (
 	"github.com/peter-mount/go-anim/renderer"
 	draw2d2 "github.com/peter-mount/go-anim/util/draw2d"
 	"github.com/peter-mount/go-anim/util/font"
-	"image"
 	"image/color"
 )
 
 type Graph struct {
 }
 
-func (_ Graph) NewContext() renderer.Context {
-	return renderer.NewContext()
+func (g Graph) NewContext() renderer.Context {
+	return g.New4k()
+}
+
+func (g Graph) New1080p() renderer.Context {
+	return g.NewSizedContext(Width1080p, Height1080p)
+}
+
+func (g Graph) New4k() renderer.Context {
+	return g.NewSizedContext(Width4K, Height4K)
 }
 
 func (_ Graph) NewSizedContext(w, h int) renderer.Context {
-	ctx := renderer.NewContext()
-	ctx.SetImage(image.NewRGBA(image.Rect(0, 0, w, h)))
-	return ctx
+	return renderer.NewContext(w, h)
 }
 
 func (_ Graph) NewFont(name string, size float64, family draw2d.FontFamily, style draw2d.FontStyle) font.Font {

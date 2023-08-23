@@ -26,7 +26,8 @@ main() {
     end := (startTime+1)*frameRate
 
     // create a context with start, end frame numbers, the frame rate and the duration
-    ctx:= animGraphic.NewContext()
+    ctx:= animGraphic.New1080p()
+    ctx.Scale(0.5,0.5)
 
     try( encoder := render.New( "test.mp4", frameRate ) ) {
         encoder.TimeCode().Set("09:25:30")
