@@ -19,15 +19,21 @@ include "clock/hands.c"
 main() {
     println( "Demo Countdown Clock - Fast")
 
-    startTime := 10  // Start at 10 seconds
-    frameRate := 30.0  // Frame rate of video
+    startTime := 50  // Start at 10 seconds
+    frameRate := 25.0  // Frame rate of video
 
     // The end frame number - here we want startTime seconds + a buffer at the end
     end := (startTime+1)*frameRate
 
-    // create a context with start, end frame numbers, the frame rate and the duration
-    ctx:= animGraphic.New1080p()
-    ctx.Scale(0.5,0.5)
+    // create a context for 4K resolution
+    ctx:= animGraphic.New4k()
+
+    // To speed up development, use 1080p but keep the 4K coordinates by scaling by 0.5
+    // This will speed up rendering rates. Only switch back to 4K for the final render.
+//    ctx:= animGraphic.New1080p().Scale(0.5,0.5)
+
+// Alternatively do it at 720p, which is 2/3 the size of 1080p or 1/3 of 4K
+//    ctx:= animGraphic.New720p().Scale(1/3.0,1/3.0)
 
     try( encoder := render.New( "test.mp4", frameRate ) ) {
         encoder.TimeCode().Set("09:25:30")

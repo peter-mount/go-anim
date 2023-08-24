@@ -16,6 +16,10 @@ func (g Graph) NewContext() renderer.Context {
 	return g.New4k()
 }
 
+func (g Graph) New720p() renderer.Context {
+	return g.NewSizedContext(Width720p, Height720p)
+}
+
 func (g Graph) New1080p() renderer.Context {
 	return g.NewSizedContext(Width1080p, Height1080p)
 }
