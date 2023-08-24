@@ -2,7 +2,7 @@ package io
 
 import (
 	"fmt"
-	"github.com/peter-mount/go-anim/script/util"
+	"github.com/peter-mount/go-anim/util/time"
 	"github.com/peter-mount/go-script/packages"
 	"image"
 	"strings"
@@ -103,14 +103,14 @@ func (r Render) newTiffTar(fileName string, frameRate int) RenderStream {
 
 type RenderStream interface {
 	Writer
-	TimeCode() *util.TimeCode
+	TimeCode() *time.TimeCode
 	EncodeBytes(img image.Image) ([]byte, error)
 }
 
 type RenderStreamBase struct {
 	Writer
 	fileName string                      // Output fileName
-	timeCode *util.TimeCode              // TimeCode
+	timeCode *time.TimeCode              // TimeCode
 	encoder  Encoder                     // Frame encoder
 	init     func(img image.Image) error // init function
 	write    func(b []byte) (int, error) // write function
@@ -167,7 +167,7 @@ func (s *RenderStreamBase) EncodeBytes(img image.Image) ([]byte, error) {
 	return s.encoder.EncodeBytes(img)
 }
 
-func (s *RenderStreamBase) TimeCode() *util.TimeCode {
+func (s *RenderStreamBase) TimeCode() *time.TimeCode {
 	return s.timeCode
 }
 

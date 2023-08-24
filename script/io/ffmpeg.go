@@ -2,7 +2,7 @@ package io
 
 import (
 	"fmt"
-	"github.com/peter-mount/go-anim/script/util"
+	"github.com/peter-mount/go-anim/util/time"
 	"github.com/peter-mount/go-kernel/v2/log"
 	"image"
 	"io"
@@ -29,7 +29,7 @@ func (_ Render) ffmpeg(fileName string, frameRate int, encoder FFMPegSessionSour
 	s := &FFMPegSession{
 		RenderStreamBase: RenderStreamBase{
 			fileName: fileName,
-			timeCode: util.NewTimeCode(frameRate),
+			timeCode: time.NewTimeCode(frameRate),
 			encoder:  encoder,
 		},
 		encoder: encoder,

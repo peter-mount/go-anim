@@ -3,7 +3,7 @@ package io
 import (
 	"archive/tar"
 	"fmt"
-	"github.com/peter-mount/go-anim/script/util"
+	time2 "github.com/peter-mount/go-anim/util/time"
 	"image"
 	"io"
 	"os"
@@ -22,7 +22,7 @@ func (_ Render) tar(fileName string, frameRate int, encoder Encoder, ext string)
 	s := &TarWriter{
 		RenderStreamBase: RenderStreamBase{
 			fileName: fileName,
-			timeCode: util.NewTimeCode(frameRate),
+			timeCode: time2.NewTimeCode(frameRate),
 			encoder:  encoder,
 		},
 		ext: ext,

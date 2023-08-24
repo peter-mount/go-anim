@@ -2,7 +2,7 @@ package clip
 
 import (
 	"encoding/binary"
-	"github.com/peter-mount/go-anim/script/util"
+	"github.com/peter-mount/go-anim/util/time"
 	"io"
 )
 
@@ -32,7 +32,7 @@ func (c *Clip) Write(w io.Writer) error {
 func ReadClip(r io.Reader) (c *Clip, err error) {
 	c = &Clip{}
 
-	c.timeCode, err = util.ReadTimeCode(r)
+	c.timeCode, err = time.ReadTimeCode(r)
 	if err == nil {
 		var l int
 		err = binary.Read(r, binary.BigEndian, &l)
@@ -56,7 +56,7 @@ func (f Frame) write(w io.Writer) error {
 }
 
 func readFrame(r io.Reader, f *Frame) error {
-	tc, err := util.ReadTimeCodeFragment(r)
+	tc, err := time.ReadTimeCodeFragment(r)
 	if err != nil {
 		return err
 	}

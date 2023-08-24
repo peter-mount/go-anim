@@ -2,7 +2,7 @@ package io
 
 import (
 	"fmt"
-	"github.com/peter-mount/go-anim/script/util"
+	"github.com/peter-mount/go-anim/util/time"
 	"os"
 )
 
@@ -15,7 +15,7 @@ func (_ Render) frames(fileName string, frameRate int, encoder Encoder) *FrameSe
 	s := &FrameSession{
 		RenderStreamBase: RenderStreamBase{
 			fileName: fileName,
-			timeCode: util.NewTimeCode(frameRate),
+			timeCode: time.NewTimeCode(frameRate),
 			encoder:  encoder,
 		},
 	}
