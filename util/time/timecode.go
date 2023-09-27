@@ -68,6 +68,7 @@ func (tc *TimeCode) Next() {
 
 		if tc.current.sec >= 86400 {
 			tc.current.sec = 0
+			tc.current.day++
 		}
 	}
 }
@@ -81,6 +82,30 @@ func (tc *TimeCode) Set(s string) (*TimeCode, error) {
 		return nil, errors.New("cannot Set a running TimeCode")
 	}
 
+	tcf, err := ParseTimeCode(s, tc.FrameRate())
+	if err != nil {
+		return nil, err
+	}
+
+	tc.start = tcf
+	tc.current = tc.start
+
+	return tc, nil
+}
+
+// IsRunning returns true if the TimeCode is running. Specifically once a frame has been rendered it is running.
+func (tc *TimeCode) IsRunning() bool {
+	return tc.frameNum > tcStartFrameNum
+}
+
+type TimeCodeFragment struct {
+	day       int // The day, used in handling fragments spanning midnight
+	sec       int // The current time code
+	frame     int // Frame within the current second
+	frameRate int // Frame Rate
+}
+
+func ParseTimeCode(s string, frameRate int) (TimeCodeFragment, error) {
 	a := strings.Split(s, ":")
 
 	l := len(a)
@@ -99,15 +124,17 @@ func (tc *TimeCode) Set(s string) (*TimeCode, error) {
 		case 1, 2:
 			valid = valid && n < 60
 		case 3:
-			valid = valid && n < tc.FrameRate()
+			valid = valid && n < frameRate
 		}
 		if valid {
 			v = append(v, n)
 		}
 	}
 
+	tc := TimeCodeFragment{frameRate: frameRate}
+
 	if !valid {
-		return nil, fmt.Errorf("invalid timecode %q must be hh:mm:ss or hh:mm:ss:ff", s)
+		return tc, fmt.Errorf("invalid timecode %q must be hh:mm:ss or hh:mm:ss:ff", s)
 	}
 
 	// If short form, set start frame to 0
@@ -115,23 +142,10 @@ func (tc *TimeCode) Set(s string) (*TimeCode, error) {
 		v = append(v, 0)
 	}
 
-	tc.start.sec = (((v[0] * 60) + v[1]) * 60) + v[2]
-	tc.start.frame = v[3]
-
-	tc.current = tc.start
+	tc.sec = (((v[0] * 60) + v[1]) * 60) + v[2]
+	tc.frame = v[3]
 
 	return tc, nil
-}
-
-// IsRunning returns true if the TimeCode is running. Specifically once a frame has been rendered it is running.
-func (tc *TimeCode) IsRunning() bool {
-	return tc.frameNum > tcStartFrameNum
-}
-
-type TimeCodeFragment struct {
-	sec       int // The current time code
-	frame     int // Frame within the current second
-	frameRate int // Frame Rate
 }
 
 func (tc TimeCodeFragment) TimeCode() string {
@@ -227,7 +241,7 @@ func (tc TimeCodeFragment) IsStartSecond() bool {
 	return tc.Frame() == 0
 }
 
-func (tc TimeCode) Write(w io.Writer) error {
+func (tc *TimeCode) Write(w io.Writer) error {
 	err := binary.Write(w, binary.BigEndian, tc.frameNum)
 	if err == nil {
 		err = tc.start.Write(w)
@@ -247,7 +261,7 @@ func ReadTimeCode(r io.Reader) (TimeCode, error) {
 	return tc, err
 }
 
-func (tc *TimeCodeFragment) Write(w io.Writer) error {
+func (tc TimeCodeFragment) Write(w io.Writer) error {
 	err := binary.Write(w, binary.BigEndian, tc.sec)
 	if err == nil {
 		err = binary.Write(w, binary.BigEndian, tc.frame)
@@ -268,4 +282,39 @@ func ReadTimeCodeFragment(r io.Reader) (TimeCodeFragment, error) {
 		err = binary.Read(r, binary.BigEndian, &tc.frameRate)
 	}
 	return tc, err
+}
+
+func (tc TimeCodeFragment) Equals(b TimeCodeFragment) bool {
+	return tc.day == b.day && tc.sec == b.sec && tc.frame == b.frame
+}
+
+func (tc TimeCodeFragment) Before(b TimeCodeFragment) bool {
+	if tc.day != b.day {
+		return tc.day < b.day
+	}
+
+	return tc.sec < b.sec || (tc.sec == b.sec && tc.frame < b.frame)
+}
+
+func (tc TimeCodeFragment) After(b TimeCodeFragment) bool {
+	if tc.day != b.day {
+		return tc.day > b.day
+	}
+
+	return tc.sec > b.sec || (tc.sec == b.sec && tc.frame > b.frame)
+}
+
+func (tc TimeCodeFragment) AddFrames(count int) TimeCodeFragment {
+	if count < 1 {
+		return tc
+	}
+
+	sec := (tc.day * 86400) + tc.sec + (count / tc.frameRate)
+
+	return TimeCodeFragment{
+		day:       sec / 86400,
+		sec:       sec % 86400,
+		frame:     count % tc.frameRate,
+		frameRate: tc.frameRate,
+	}
 }
