@@ -6,15 +6,16 @@ type Iterator struct {
 }
 
 func (i *Iterator) HasNext() bool {
-	return i.tc.TimeCode().Before(i.end)
+	return i.tc.TimeCode().NotAfter(i.end)
 }
 
 func (i *Iterator) Next() interface{} {
 	if !i.HasNext() {
 		panic("TimeCodeIterator completed")
 	}
+	ret := i.tc.TimeCode()
 	i.tc.Next()
-	return i.tc.TimeCode()
+	return ret
 }
 
 func (tc *TimeCode) runUntil(tcf TimeCodeFragment) *Iterator {

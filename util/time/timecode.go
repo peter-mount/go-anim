@@ -113,6 +113,17 @@ func ParseTimeCode(s string, frameRate int) (TimeCodeFragment, error) {
 	// Allow either "hh:mm:ss" or "hh:mm:ss:ff". For the shorter, ff=0
 	valid := l == 3 || l == 4
 
+	// "dd:hh:mm:ss:ff" allows for spanning midnight
+	day := 0
+	if l == 5 {
+		n, err := strconv.Atoi(a[0])
+		valid = err == nil && n >= 0
+		day = n
+		// Strip off the day from the slice
+		a = a[1:]
+		l--
+	}
+
 	// Parse each field as an int, testing for bounds
 	var v []int
 	for i := 0; i < l && valid; i++ {
@@ -131,7 +142,7 @@ func ParseTimeCode(s string, frameRate int) (TimeCodeFragment, error) {
 		}
 	}
 
-	tc := TimeCodeFragment{frameRate: frameRate}
+	tc := TimeCodeFragment{frameRate: frameRate, day: day}
 
 	if !valid {
 		return tc, fmt.Errorf("invalid timecode %q must be hh:mm:ss or hh:mm:ss:ff", s)
@@ -163,7 +174,11 @@ func (tc TimeCodeFragment) FrameRateF() float64 {
 
 // Offset returns the number of seconds since "00:00:00" for the clip
 func (tc TimeCodeFragment) Offset() int {
-	return tc.sec
+	return tc.sec + (tc.day * 86400)
+}
+
+func (tc TimeCodeFragment) Day() int {
+	return tc.day
 }
 
 // Hour returns the hour component as an int
@@ -181,6 +196,10 @@ func (tc TimeCodeFragment) Second() int {
 	return tc.sec % 60
 }
 
+func (tc TimeCodeFragment) DayF() float64 {
+	return float64(tc.Day())
+}
+
 func (tc TimeCodeFragment) HourF() float64 {
 	return float64(tc.Hour())
 }
@@ -191,6 +210,11 @@ func (tc TimeCodeFragment) MinuteF() float64 {
 
 func (tc TimeCodeFragment) SecondF() float64 {
 	return float64(tc.Second())
+}
+
+// DayS returns the hour component as a 2 digit string, useful in rendering
+func (tc TimeCodeFragment) DayS() string {
+	return tc.digit(tc.Day())
 }
 
 // HourS returns the hour component as a 2 digit string, useful in rendering
@@ -296,6 +320,10 @@ func (tc TimeCodeFragment) Before(b TimeCodeFragment) bool {
 	return tc.sec < b.sec || (tc.sec == b.sec && tc.frame < b.frame)
 }
 
+func (tc TimeCodeFragment) NotAfter(b TimeCodeFragment) bool {
+	return tc.Before(b) || tc.Equals(b)
+}
+
 func (tc TimeCodeFragment) After(b TimeCodeFragment) bool {
 	if tc.day != b.day {
 		return tc.day > b.day
@@ -309,12 +337,13 @@ func (tc TimeCodeFragment) AddFrames(count int) TimeCodeFragment {
 		return tc
 	}
 
-	sec := (tc.day * 86400) + tc.sec + (count / tc.frameRate)
+	frame := (((tc.day * 86400) + tc.sec) * tc.frameRate) + tc.frame + count
+	sec := frame / tc.frameRate
 
 	return TimeCodeFragment{
 		day:       sec / 86400,
 		sec:       sec % 86400,
-		frame:     count % tc.frameRate,
+		frame:     frame % tc.frameRate,
 		frameRate: tc.frameRate,
 	}
 }

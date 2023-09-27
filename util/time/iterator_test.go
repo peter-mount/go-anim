@@ -11,21 +11,33 @@ func TestIterator(t *testing.T) {
 		frameCount int    // if >0 number of frames from start
 		until      string // if set then timecode of end
 		expect     string // timecode to expect at end
-		expectDay  int    // day of end timecode
 	}
 
 	tests := []test{
 		// ====================
-		// Test from 0
+		// ForFrames
 		// ====================
-		{name: "zero 10", start: "00:00:00:00", frameCount: 10, expect: "00:00:00:10"},
-		{name: "zero 30", start: "00:00:00:00", frameCount: 30, expect: "00:00:01:00"},
-		{name: "zero 60", start: "00:00:00:00", frameCount: 60, expect: "00:00:02:00"},
-		{name: "zero 90", start: "00:00:00:00", frameCount: 90, expect: "00:00:03:00"},
-		{name: "until 10", start: "00:00:00:00", until: "00:00:00:10", expect: "00:00:00:10"},
-		{name: "until 30", start: "00:00:00:00", until: "00:00:01:00", expect: "00:00:01:00"},
-		{name: "until 60", start: "00:00:00:00", until: "00:00:02:00", expect: "00:00:02:00"},
-		{name: "until 90", start: "00:00:00:00", until: "00:00:03:00", expect: "00:00:03:00"},
+		{name: "ForFrames 10", start: "00:00:00:00", frameCount: 10, expect: "00:00:00:10"},
+		{name: "ForFrames 30", start: "00:00:00:00", frameCount: 30, expect: "00:00:01:00"},
+		{name: "ForFrames 60", start: "00:00:00:00", frameCount: 60, expect: "00:00:02:00"},
+		{name: "ForFrames 90", start: "00:00:00:00", frameCount: 90, expect: "00:00:03:00"},
+		// ====================
+		// Until
+		// ====================
+		{name: "Until 10", start: "00:00:00:00", until: "00:00:00:10", expect: "00:00:00:10"},
+		{name: "Until 30", start: "00:00:00:00", until: "00:00:01:00", expect: "00:00:01:00"},
+		{name: "Until 60", start: "00:00:00:00", until: "00:00:02:00", expect: "00:00:02:00"},
+		{name: "Until 90", start: "00:00:00:00", until: "00:00:03:00", expect: "00:00:03:00"},
+		// ====================
+		// Cross midnight
+		// ====================
+		{name: "ForFrames 30 midnight", start: "23:59:59:10", frameCount: 30, expect: "01:00:00:00:10"},
+		{name: "ForFrames 60 midnight", start: "23:59:59:20", frameCount: 60, expect: "01:00:00:01:20"},
+		{name: "ForFrames 90 midnight", start: "23:59:59:20", frameCount: 90, expect: "01:00:00:02:20"},
+		{name: "Until 10 midnight", start: "23:59:59:20", until: "00:00:00:10", expect: "01:00:00:00:10"},
+		{name: "Until 30 midnight", start: "23:59:59:20", until: "00:00:01:00", expect: "01:00:00:01:00"},
+		{name: "Until 60 midnight", start: "23:59:59:20", until: "00:00:02:00", expect: "01:00:00:02:00"},
+		{name: "Until 90 midnight", start: "23:59:59:20", until: "00:00:03:00", expect: "01:00:00:03:00"},
 	}
 
 	for _, tt := range tests {
@@ -42,7 +54,6 @@ func TestIterator(t *testing.T) {
 				t.Fatal(err)
 				return
 			}
-			expect.day = tt.expectDay
 
 			var iterator *Iterator
 			switch {
