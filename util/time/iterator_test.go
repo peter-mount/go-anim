@@ -75,7 +75,7 @@ func TestIterator(t *testing.T) {
 			}
 
 			if !iterator.HasNext() {
-				t.Fatal("Iterator empty?")
+				t.Fatal("TimeCodeFragmentIterator empty?")
 				return
 			}
 

@@ -332,18 +332,29 @@ func (tc TimeCodeFragment) After(b TimeCodeFragment) bool {
 	return tc.sec > b.sec || (tc.sec == b.sec && tc.frame > b.frame)
 }
 
+func (tc TimeCodeFragment) toFrame(d, h, m, s, f int) int {
+	return (((d * 86400) + (h * 3600) + (m * 60) + s) * tc.frameRate) + f
+}
+
 func (tc TimeCodeFragment) AddFrames(count int) TimeCodeFragment {
 	if count < 1 {
 		return tc
 	}
 
-	frame := (((tc.day * 86400) + tc.sec) * tc.frameRate) + tc.frame + count
-	sec := frame / tc.frameRate
+	return tc.new(tc.toFrame(tc.day, 0, 0, tc.sec, tc.frame) + count)
+}
+
+func (tc TimeCodeFragment) new(f int) TimeCodeFragment {
+	sec := f / tc.frameRate
 
 	return TimeCodeFragment{
 		day:       sec / 86400,
 		sec:       sec % 86400,
-		frame:     frame % tc.frameRate,
+		frame:     f % tc.frameRate,
 		frameRate: tc.frameRate,
 	}
+}
+
+func (tc TimeCodeFragment) Add(d, h, m, s, f int) TimeCodeFragment {
+	return tc.AddFrames(tc.toFrame(d, h, m, s, f))
 }

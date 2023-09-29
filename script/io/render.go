@@ -101,6 +101,10 @@ func (r Render) newTiffTar(fileName string, frameRate int) RenderStream {
 	return r.tar(fileName, frameRate, &TIFF{}, ".tiff")
 }
 
+func (r Render) TimeCode(frameRate int) *time.TimeCode {
+	return time.NewTimeCode(frameRate)
+}
+
 type RenderStream interface {
 	Writer
 	TimeCode() *time.TimeCode
@@ -177,4 +181,63 @@ func (s *RenderStreamBase) FrameRate() int {
 
 func (s *RenderStreamBase) FrameRateF() float64 {
 	return s.TimeCode().FrameRateF()
+}
+
+// Iterator is returned by a renderer to handle spanning over a range of TimeCode's.
+// Unlike the iterator returned by TimeCode, this one does not advance the TimeCode when Next() is
+// called as that's done when writing an image.
+type Iterator struct {
+	tc      *time.TimeCode        // Pointer to underlying TimeCode
+	running bool                  // set after first call to Next()
+	last    time.TimeCodeFragment // The last value returned by Next()
+	end     time.TimeCodeFragment // The TimeCodeFragment of the frame after the last frame
+}
+
+func (i *Iterator) HasNext() bool {
+	return i.tc.TimeCode().Before(i.end)
+}
+
+func (i *Iterator) Next() interface{} {
+	if !i.HasNext() {
+		panic("TimeCodeIterator completed")
+	}
+
+	tc := i.tc.TimeCode()
+
+	// This prevents infinite loops if an image was not rendered
+	// as, after the first frame, if the last timecode equals the current one
+	// then we have not progressed the TimeCode, probably due to not writing a frame
+	if i.running && i.last.Equals(tc) {
+		panic("TimeCode not advanced")
+	}
+
+	i.running = true
+	i.last = tc
+	return tc
+}
+
+func (s *RenderStreamBase) runUntil(tcf time.TimeCodeFragment) *Iterator {
+	// Add 1 frame as end is the TimeCode of the frame after the iterator
+	return &Iterator{
+		tc:  s.TimeCode(),
+		end: tcf.Add(0, 0, 0, 0, 1),
+	}
+}
+
+func (s *RenderStreamBase) ForFrames(count int) *Iterator {
+	return s.runUntil(s.TimeCode().TimeCode().AddFrames(count))
+}
+
+func (s *RenderStreamBase) Until(ts string) (*Iterator, error) {
+	tcf, err := time.ParseTimeCode(ts, s.FrameRate())
+	if err != nil {
+		return nil, err
+	}
+
+	// check for crossing midnight
+	if tcf.Before(s.TimeCode().TimeCode()) {
+		tcf = tcf.Add(1, 0, 0, 0, 0)
+	}
+
+	return s.runUntil(tcf), nil
 }

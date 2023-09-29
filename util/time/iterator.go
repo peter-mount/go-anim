@@ -1,12 +1,14 @@
 package time
 
+// Iterator is returned by TimeCode for advancing it for a set period.
+// Each call to Next() will advance the TimeCode.
 type Iterator struct {
 	tc  *TimeCode
 	end TimeCodeFragment
 }
 
 func (i *Iterator) HasNext() bool {
-	return i.tc.TimeCode().NotAfter(i.end)
+	return i.tc.TimeCode().Before(i.end)
 }
 
 func (i *Iterator) Next() interface{} {
@@ -19,9 +21,10 @@ func (i *Iterator) Next() interface{} {
 }
 
 func (tc *TimeCode) runUntil(tcf TimeCodeFragment) *Iterator {
+	// Add 1 frame as end is the TimeCode of the frame after the iterator
 	return &Iterator{
 		tc:  tc,
-		end: tcf,
+		end: tcf.Add(0, 0, 0, 0, 1),
 	}
 }
 
