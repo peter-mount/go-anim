@@ -50,7 +50,7 @@ main() {
             // have an extra second on the end showing the clock stopped
             demoCountdown(ctx, math.Max(0,startTime - (math.Float(frameNum)/frameRate)) )
 
-            if frameNum < 500 encoder.WriteImage(ctx.Image())
+            encoder.WriteImage(ctx.Image())
         }
     }
 
