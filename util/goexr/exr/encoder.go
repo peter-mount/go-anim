@@ -49,7 +49,7 @@ func (e *Encoder) Encode(w io.Writer, m image.Image) error {
 		e.channels = append(e.channels, exr.Channel{
 			Name:      n,
 			PixelType: e.pixelType,
-			Linear:    false,
+			Linear:    true,
 			XSampling: e.XSampling,
 			YSampling: e.YSampling,
 		})
