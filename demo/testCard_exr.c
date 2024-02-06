@@ -19,9 +19,9 @@ main() {
     }
     try( f := os.Create("test.jpg") ) {
         testCardUHD( ctx )
-        render.Jpeg().Encode(f,ctx.Image())
+        e:=render.Jpeg().Encode(f,ctx.Image())
     }
-    try( f := os.Create("test.tiff") ) {
+    try( f := os.Create("test.tif") ) {
         testCardUHD( ctx )
         render.Tiff().Encode(f,ctx.Image())
     }

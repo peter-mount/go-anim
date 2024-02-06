@@ -9,6 +9,22 @@ import (
 
 type JPEG struct{}
 
+func (_ JPEG) Encoder() RawEncoder {
+	return &jpegEncoder{quality: 90}
+}
+
+type jpegEncoder struct {
+	quality int
+}
+
+func (j *jpegEncoder) Quality(quality int) {
+	j.quality = quality
+}
+
+func (j *jpegEncoder) Encode(w io.Writer, img image.Image) error {
+	return jpeg.Encode(w, img, &jpeg.Options{Quality: j.quality})
+}
+
 func (_ JPEG) Decode(r io.Reader) (image.Image, error) {
 	return jpeg.Decode(r)
 }

@@ -6,9 +6,15 @@ import (
 	"os"
 )
 
-type Encoder interface {
+type RawEncoder interface {
 	Encode(w io.Writer, img image.Image) error
+}
+
+type Encoder interface {
+	RawEncoder
+	Encoder() RawEncoder
 	EncodeBytes(img image.Image) ([]byte, error)
+	EncodeFFMPEG(img image.Image) ([]string, error)
 }
 
 type Decoder interface {
@@ -28,6 +34,10 @@ type ImageCodec interface {
 
 type imageCodecImpl struct {
 	codec imageCodec
+}
+
+func (c *imageCodecImpl) Encoder() RawEncoder {
+	return c.codec.Encoder()
 }
 
 func (c *imageCodecImpl) Encode(w io.Writer, img image.Image) error {
@@ -58,6 +68,10 @@ func (c *imageCodecImpl) Write(fileName string, img image.Image) error {
 	}
 	defer f.Close()
 	return c.Encode(f, img)
+}
+
+func (c *imageCodecImpl) EncodeFFMPEG(img image.Image) ([]string, error) {
+	return c.codec.EncodeFFMPEG(img)
 }
 
 func codec(codec imageCodec) ImageCodec {

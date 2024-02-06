@@ -10,6 +10,7 @@ import (
 
 func init() {
 	r := &Render{
+		raw:  codec(&Raw{}),
 		exr:  codec(&EXR{}),
 		png:  codec(&PNG{}),
 		jpg:  codec(&JPEG{}),
@@ -53,6 +54,7 @@ func init() {
 
 type Render struct {
 	renderers []rendererHandler
+	raw       ImageCodec
 	exr       ImageCodec
 	png       ImageCodec
 	jpg       ImageCodec
@@ -75,55 +77,55 @@ func (r Render) New(fileName string, frameRate int) (RenderStream, error) {
 }
 
 func (r Render) newRawMp4(fileName string, frameRate int) RenderStream {
-	return r.ffmpeg(fileName, frameRate, &Raw{})
+	return r.ffmpeg(fileName, frameRate, r.raw)
 }
 
 func (r Render) newExrMp4(fileName string, frameRate int) RenderStream {
-	return r.ffmpeg(fileName, frameRate, &EXR{})
+	return r.ffmpeg(fileName, frameRate, r.exr)
 }
 
 func (r Render) newPngMp4(fileName string, frameRate int) RenderStream {
-	return r.ffmpeg(fileName, frameRate, &PNG{})
+	return r.ffmpeg(fileName, frameRate, r.png)
 }
 
 func (r Render) newJpegMp4(fileName string, frameRate int) RenderStream {
-	return r.ffmpeg(fileName, frameRate, &JPEG{})
+	return r.ffmpeg(fileName, frameRate, r.jpg)
 }
 
 func (r Render) newTiffMp4(fileName string, frameRate int) RenderStream {
-	return r.ffmpeg(fileName, frameRate, &TIFF{})
+	return r.ffmpeg(fileName, frameRate, r.tiff)
 }
 
 func (r Render) newExr(fileName string, frameRate int) RenderStream {
-	return r.frames(fileName, frameRate, &EXR{})
+	return r.frames(fileName, frameRate, r.exr)
 }
 
 func (r Render) newPng(fileName string, frameRate int) RenderStream {
-	return r.frames(fileName, frameRate, &PNG{})
+	return r.frames(fileName, frameRate, r.png)
 }
 
 func (r Render) newJpeg(fileName string, frameRate int) RenderStream {
-	return r.frames(fileName, frameRate, &JPEG{})
+	return r.frames(fileName, frameRate, r.jpg)
 }
 
 func (r Render) newTiff(fileName string, frameRate int) RenderStream {
-	return r.frames(fileName, frameRate, &TIFF{})
+	return r.frames(fileName, frameRate, r.tiff)
 }
 
 func (r Render) newExrTar(fileName string, frameRate int) RenderStream {
-	return r.tar(fileName, frameRate, &EXR{}, ".exr")
+	return r.tar(fileName, frameRate, r.exr, ".exr")
 }
 
 func (r Render) newPngTar(fileName string, frameRate int) RenderStream {
-	return r.tar(fileName, frameRate, &PNG{}, ".png")
+	return r.tar(fileName, frameRate, r.png, ".png")
 }
 
 func (r Render) newJpegTar(fileName string, frameRate int) RenderStream {
-	return r.tar(fileName, frameRate, &JPEG{}, ".jpg")
+	return r.tar(fileName, frameRate, r.jpg, ".jpg")
 }
 
 func (r Render) newTiffTar(fileName string, frameRate int) RenderStream {
-	return r.tar(fileName, frameRate, &TIFF{}, ".tiff")
+	return r.tar(fileName, frameRate, r.tiff, ".tiff")
 }
 
 func (r Render) TimeCode(frameRate int) *time.TimeCode {

@@ -9,6 +9,10 @@ import (
 
 type EXR struct{}
 
+func (_ EXR) Encoder() RawEncoder {
+	return exr.NewEncoder()
+}
+
 func (_ EXR) Encode(w io.Writer, img image.Image) error {
 	return exr.Encode(w, img)
 }
