@@ -1,6 +1,8 @@
 package exr
 
-import "io"
+import (
+	"io"
+)
 
 const (
 	SupportedVersion = 2

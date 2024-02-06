@@ -4,7 +4,7 @@ import (
 	"image"
 	"image/color"
 
-	"github.com/mokiat/goexr/exr/internal/exr"
+	"github.com/peter-mount/go-anim/util/goexr/exr/internal/exr"
 )
 
 // RGBAImage represents an EXR image that consists of R, G, B, and A components.

@@ -3,6 +3,7 @@ package exr
 import (
 	"encoding/binary"
 	"fmt"
+	"image"
 	"io"
 )
 
@@ -42,4 +43,22 @@ func (b Box2i) Contains(other Box2i) bool {
 		other.XMax <= b.XMax &&
 		other.YMin >= b.YMin &&
 		other.YMax <= b.YMax
+}
+
+func Box2iFromRect(r image.Rectangle) Box2i {
+	return Box2i{
+		XMin: int32(r.Min.X),
+		YMin: int32(r.Min.Y),
+		XMax: int32(r.Max.X),
+		YMax: int32(r.Max.Y),
+	}
+}
+
+func (b Box2i) Bytes() []byte {
+	var r []byte
+	r = binary.LittleEndian.AppendUint32(r, uint32(b.XMin))
+	r = binary.LittleEndian.AppendUint32(r, uint32(b.YMin))
+	r = binary.LittleEndian.AppendUint32(r, uint32(b.XMax))
+	r = binary.LittleEndian.AppendUint32(r, uint32(b.YMax))
+	return r
 }

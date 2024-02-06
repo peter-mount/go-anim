@@ -25,6 +25,7 @@ func init() {
 		// .mp4 default using raw frames
 		{suffix: ".mp4", handler: r.newRawMp4},
 		// directory frame types
+		{suffix: ".exr", handler: r.newExr},
 		{suffix: ".png", handler: r.newPng},
 		{suffix: ".jpg", handler: r.newJpeg},
 		{suffix: ".jpeg", handler: r.newJpeg},
@@ -75,6 +76,10 @@ func (r Render) newJpegMp4(fileName string, frameRate int) RenderStream {
 
 func (r Render) newTiffMp4(fileName string, frameRate int) RenderStream {
 	return r.ffmpeg(fileName, frameRate, &TIFF{})
+}
+
+func (r Render) newExr(fileName string, frameRate int) RenderStream {
+	return r.frames(fileName, frameRate, &EXR{})
 }
 
 func (r Render) newPng(fileName string, frameRate int) RenderStream {

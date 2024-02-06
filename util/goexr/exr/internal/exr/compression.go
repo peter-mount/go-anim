@@ -22,6 +22,10 @@ const (
 
 type Compression uint8
 
+func (c Compression) Bytes() []byte {
+	return []byte{byte(c)}
+}
+
 func (c Compression) LineCount() int {
 	switch c {
 	case CompressionNone:

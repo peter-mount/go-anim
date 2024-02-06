@@ -17,6 +17,10 @@ const (
 
 type LineOrder uint8
 
+func (o LineOrder) Bytes() []byte {
+	return []byte{byte(o)}
+}
+
 func (o LineOrder) String() string {
 	switch o {
 	case LineOrderIncreasingY:

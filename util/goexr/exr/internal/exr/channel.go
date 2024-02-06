@@ -39,12 +39,37 @@ func ReadChannelList(in io.Reader, target *ChannelList) error {
 
 type ChannelList []Channel
 
+func (l ChannelList) Bytes() []byte {
+	var b []byte
+	for _, c := range l {
+		b = c.append(b)
+	}
+	return append(b, 0x00)
+}
+
 type Channel struct {
 	Name      string
 	PixelType PixelType
 	Linear    bool
 	XSampling int32
 	YSampling int32
+}
+
+func (c Channel) append(b []byte) []byte {
+	b = AppendNullTerminatedString(b, c.Name)
+	b = order.AppendUint32(b, uint32(c.PixelType))
+	if c.Linear {
+		b = append(b, 1)
+	} else {
+		b = append(b, 0)
+	}
+
+	// 3 reserved bytes
+	b = append(b, 0, 0, 0)
+
+	b = order.AppendUint32(b, uint32(c.XSampling))
+	b = order.AppendUint32(b, uint32(c.YSampling))
+	return b
 }
 
 const (
