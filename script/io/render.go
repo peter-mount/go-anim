@@ -132,7 +132,7 @@ func (r Render) TimeCode(frameRate int) *time.TimeCode {
 
 func (r Render) Exr() ImageCodec { return r.exr }
 
-func (r Render) Pngg() ImageCodec { return r.png }
+func (r Render) Png() ImageCodec { return r.png }
 
 func (r Render) Jpeg() ImageCodec { return r.jpg }
 
