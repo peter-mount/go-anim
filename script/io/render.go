@@ -9,11 +9,16 @@ import (
 )
 
 func init() {
-	r := &Render{}
+	r := &Render{
+		exr:  codec(&EXR{}),
+		png:  codec(&PNG{}),
+		jpg:  codec(&JPEG{}),
+		tiff: codec(&TIFF{}),
+	}
 
 	// Populate the extensions.
 	// This is first come, first served so ensure that the longer
-	// variants are first, e.g. .raw.mp4 is before .mp4
+	// variants are first, e.g., .raw.mp4 is before .mp4
 	r.renderers = []rendererHandler{
 		// .mp4 frame types
 		{suffix: ".raw.mp4", handler: r.newRawMp4},
@@ -48,7 +53,12 @@ func init() {
 
 type Render struct {
 	renderers []rendererHandler
+	exr       ImageCodec
+	png       ImageCodec
+	jpg       ImageCodec
+	tiff      ImageCodec
 }
+
 type rendererHandler struct {
 	suffix  string
 	handler func(fileName string, frameRate int) RenderStream
@@ -119,6 +129,14 @@ func (r Render) newTiffTar(fileName string, frameRate int) RenderStream {
 func (r Render) TimeCode(frameRate int) *time.TimeCode {
 	return time.NewTimeCode(frameRate)
 }
+
+func (r Render) Exr() ImageCodec { return r.exr }
+
+func (r Render) Pngg() ImageCodec { return r.png }
+
+func (r Render) Jpeg() ImageCodec { return r.jpg }
+
+func (r Render) Tiff() ImageCodec { return r.tiff }
 
 type RenderStream interface {
 	Writer

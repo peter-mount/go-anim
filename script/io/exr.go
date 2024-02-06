@@ -24,3 +24,7 @@ func (_ EXR) EncodeBytes(img image.Image) ([]byte, error) {
 func (_ EXR) EncodeFFMPEG(_ image.Image) ([]string, error) {
 	return nil, nil
 }
+
+func (_ EXR) Decode(r io.Reader) (image.Image, error) {
+	return exr.Decode(r)
+}

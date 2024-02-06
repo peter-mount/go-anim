@@ -8,17 +8,28 @@ main() {
     // create a context for 4K resolution
     ctx:= animGraphic.New4k()
 
-    try( encoder := render.New( "test-%05d.exr", 1 ) ) {
-        renderImage(ctx,encoder)
+    // exr as a single file
+    try( f := os.Create("test.exr") ) {
+        testCardUHD( ctx )
+        render.Exr().Encode(f,ctx.Image())
+    }
+    try( f := os.Create("test.png") ) {
+        testCardUHD( ctx )
+        render.Png().Encode(f,ctx.Image())
+    }
+    try( f := os.Create("test.jpg") ) {
+        testCardUHD( ctx )
+        render.Jpeg().Encode(f,ctx.Image())
+    }
+    try( f := os.Create("test.tiff") ) {
+        testCardUHD( ctx )
+        render.Tiff().Encode(f,ctx.Image())
     }
 
-//    try( encoder := render.New( "test-%05d.png", 1 ) ) {
-//        renderImage(ctx,encoder)
-//    }
+    // exr vua a renderer
+    try( encoder := render.New( "test-%05d.exr", 1 ) ) {
+        testCardUHD( ctx )
+        encoder.WriteImage(ctx.Image())
+    }
 
-}
-
-renderImage(ctx,encoder) {
-    testCardUHD( ctx )
-    encoder.WriteImage(ctx.Image())
 }

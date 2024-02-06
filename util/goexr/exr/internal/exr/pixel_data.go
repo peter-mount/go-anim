@@ -12,6 +12,7 @@ type PixelData interface {
 	ReadLine(in io.Reader, y int32) error
 	WriteLine(w io.Writer, y int32) error
 	Float32(x, y int) float32
+	Set(x, y int, v float32)
 }
 
 func NewNopPixelData(value float32) PixelData {
@@ -39,6 +40,8 @@ func (d *nopPixelData) WriteLine(w io.Writer, y int32) error {
 func (d *nopPixelData) Float32(x, y int) float32 {
 	return d.value
 }
+
+func (d *nopPixelData) Set(x, y int, v float32) {}
 
 func NewUint32PixelData(window Box2i, xSampling, ySampling int32) PixelData {
 	return &uint32PixelData{
@@ -68,6 +71,8 @@ func (d *uint32PixelData) WriteLine(w io.Writer, y int32) error {
 func (d *uint32PixelData) Float32(x, y int) float32 {
 	return 0.0 // uint32 is used for object reference, not colors
 }
+
+func (d *uint32PixelData) Set(x, y int, v float32) {}
 
 func NewFloat16PixelData(window Box2i, xSampling, ySampling int32) PixelData {
 	width := window.Width() / xSampling
@@ -127,6 +132,14 @@ func (d *float16PixelData) Float32(x, y int) float32 {
 	return value.Float32()
 }
 
+func (d *float16PixelData) Set(x, y int, v float32) {
+	offX := (int32(x) - d.window.XMin) / d.xSampling
+	offY := (int32(y) - d.window.YMin) / d.ySampling
+	width := d.window.Width() / d.xSampling
+
+	d.pixels[offX+width*offY] = float16.Fromfloat32(v)
+}
+
 func NewFloat32PixelData(window Box2i, xSampling, ySampling int32) PixelData {
 	width := window.Width() / xSampling
 	height := window.Height() / ySampling
@@ -175,4 +188,12 @@ func (d *float32PixelData) Float32(x, y int) float32 {
 	offY := (int32(y) - d.window.YMin) / d.ySampling
 	width := d.window.Width() / d.xSampling
 	return d.pixels[offX+width*offY]
+}
+
+func (d *float32PixelData) Set(x, y int, v float32) {
+	offX := (int32(x) - d.window.XMin) / d.xSampling
+	offY := (int32(y) - d.window.YMin) / d.ySampling
+	width := d.window.Width() / d.xSampling
+
+	d.pixels[offX+width*offY] = v
 }
