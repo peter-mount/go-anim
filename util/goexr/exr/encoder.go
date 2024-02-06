@@ -49,7 +49,7 @@ func (e *Encoder) Encode(w io.Writer, m image.Image) error {
 		e.channels = append(e.channels, exr.Channel{
 			Name:      n,
 			PixelType: e.pixelType,
-			Linear:    true,
+			Linear:    false,
 			XSampling: e.XSampling,
 			YSampling: e.YSampling,
 		})
@@ -128,9 +128,8 @@ func (e *Encoder) writeHeader(w io.Writer) error {
 }
 
 var (
-	// The Channels to render, must be in RGBA order.
-	// TODO for some reason Alpha breaks the output so we do not include it for now until I understand how this is meant to behave
-	components = []string{"R", "G", "B" /*, "A"*/}
+	// The Channels to render, must be in Alphabetical order as that's the order defined for a scan line within exr.
+	components = []string{"A", "B", "G", "R"}
 )
 
 // encodeImage encodes a normal Image. RGBAImage is handled directly by encodeNative
@@ -157,10 +156,10 @@ func (e *Encoder) encodeImage(w io.Writer, m image.Image) error {
 	dataSize := int32(pixelSize + 8)
 	lineBuffer := make([]byte, dataSize)
 
-	rOff := 8
-	gOff := rOff + lineSize
-	bOff := gOff + lineSize
-	//aOff := bOff + lineSize
+	aOff := 8
+	bOff := aOff + lineSize
+	gOff := bOff + lineSize
+	rOff := gOff + lineSize
 
 	offset, err := e.writeStart(w)
 	if err != nil {
@@ -184,23 +183,23 @@ func (e *Encoder) encodeImage(w io.Writer, m image.Image) error {
 
 		off := 0
 		for x := bounds.Min.X; x <= bounds.Max.X; x++ {
-			r, g, b, _ := m.At(x, y).RGBA()
+			r, g, b, a := m.At(x, y).RGBA()
 			switch e.pixelType {
 			case exr.PixelTypeHalf:
-				binary.LittleEndian.PutUint16(lineBuffer[rOff+off:rOff+off+2], float16.Fromfloat32(float32(r)/float32(0xffff)).Bits())
-				binary.LittleEndian.PutUint16(lineBuffer[gOff+off:gOff+off+2], float16.Fromfloat32(float32(g)/float32(0xffff)).Bits())
+				binary.LittleEndian.PutUint16(lineBuffer[aOff+off:aOff+off+2], float16.Fromfloat32(float32(a)/float32(0xffff)).Bits())
 				binary.LittleEndian.PutUint16(lineBuffer[bOff+off:bOff+off+2], float16.Fromfloat32(float32(b)/float32(0xffff)).Bits())
-				//binary.LittleEndian.PutUint16(lineBuffer[aOff+off:aOff+off+2], float16.Fromfloat32(float32(a)/float32(0xffff)).Bits())
+				binary.LittleEndian.PutUint16(lineBuffer[gOff+off:gOff+off+2], float16.Fromfloat32(float32(g)/float32(0xffff)).Bits())
+				binary.LittleEndian.PutUint16(lineBuffer[rOff+off:rOff+off+2], float16.Fromfloat32(float32(r)/float32(0xffff)).Bits())
 			case exr.PixelTypeFloat:
-				binary.LittleEndian.PutUint32(lineBuffer[rOff+off:rOff+off+4], math.Float32bits(float32(r&0xffff)/float32(0xffff)))
-				binary.LittleEndian.PutUint32(lineBuffer[gOff+off:gOff+off+4], math.Float32bits(float32(g&0xffff)/float32(0xffff)))
+				binary.LittleEndian.PutUint32(lineBuffer[aOff+off:aOff+off+4], math.Float32bits(float32(a&0xffff)/float32(0xffff)))
 				binary.LittleEndian.PutUint32(lineBuffer[bOff+off:bOff+off+4], math.Float32bits(float32(b&0xffff)/float32(0xffff)))
-				//binary.LittleEndian.PutUint32(lineBuffer[aOff+off:aOff+off+4], math.Float32bits(float32(a&0xffff)/float32(0xffff)))
+				binary.LittleEndian.PutUint32(lineBuffer[gOff+off:gOff+off+4], math.Float32bits(float32(g&0xffff)/float32(0xffff)))
+				binary.LittleEndian.PutUint32(lineBuffer[rOff+off:rOff+off+4], math.Float32bits(float32(r&0xffff)/float32(0xffff)))
 			case exr.PixelTypeUint:
-				binary.LittleEndian.PutUint32(lineBuffer[rOff+off:rOff+off+4], r<<16)
-				binary.LittleEndian.PutUint32(lineBuffer[gOff+off:gOff+off+4], g<<16)
+				binary.LittleEndian.PutUint32(lineBuffer[aOff+off:aOff+off+4], a<<16)
 				binary.LittleEndian.PutUint32(lineBuffer[bOff+off:bOff+off+4], b<<16)
-				//binary.LittleEndian.PutUint32(lineBuffer[aOff+off:aOff+off+4], a<<16)
+				binary.LittleEndian.PutUint32(lineBuffer[gOff+off:gOff+off+4], g<<16)
+				binary.LittleEndian.PutUint32(lineBuffer[rOff+off:rOff+off+4], r<<16)
 			}
 			off += pixelWidth
 		}
