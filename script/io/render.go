@@ -17,6 +17,7 @@ func init() {
 	r.renderers = []rendererHandler{
 		// .mp4 frame types
 		{suffix: ".raw.mp4", handler: r.newRawMp4},
+		{suffix: ".exr.mp4", handler: r.newExrMp4},
 		{suffix: ".png.mp4", handler: r.newPngMp4},
 		{suffix: ".jpg.mp4", handler: r.newJpegMp4},
 		{suffix: ".jpeg.mp4", handler: r.newJpegMp4},
@@ -32,6 +33,7 @@ func init() {
 		{suffix: ".tiff", handler: r.newTiff},
 		{suffix: ".tif", handler: r.newTiff},
 		// tar frame types
+		{suffix: ".exr.tar", handler: r.newExrTar},
 		{suffix: ".png.tar", handler: r.newPngTar},
 		{suffix: ".jpg.tar", handler: r.newJpegTar},
 		{suffix: ".jpeg.tar", handler: r.newJpegTar},
@@ -66,6 +68,10 @@ func (r Render) newRawMp4(fileName string, frameRate int) RenderStream {
 	return r.ffmpeg(fileName, frameRate, &Raw{})
 }
 
+func (r Render) newExrMp4(fileName string, frameRate int) RenderStream {
+	return r.ffmpeg(fileName, frameRate, &EXR{})
+}
+
 func (r Render) newPngMp4(fileName string, frameRate int) RenderStream {
 	return r.ffmpeg(fileName, frameRate, &PNG{})
 }
@@ -92,6 +98,10 @@ func (r Render) newJpeg(fileName string, frameRate int) RenderStream {
 
 func (r Render) newTiff(fileName string, frameRate int) RenderStream {
 	return r.frames(fileName, frameRate, &TIFF{})
+}
+
+func (r Render) newExrTar(fileName string, frameRate int) RenderStream {
+	return r.tar(fileName, frameRate, &EXR{}, ".exr")
 }
 
 func (r Render) newPngTar(fileName string, frameRate int) RenderStream {
