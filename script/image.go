@@ -3,6 +3,7 @@ package script
 import (
 	color2 "github.com/peter-mount/go-anim/graph/color"
 	"github.com/peter-mount/go-anim/renderer"
+	"github.com/peter-mount/go-anim/util/goexr/exr"
 	"image"
 	"image/color"
 )
@@ -59,6 +60,16 @@ func (_ Image) NewRGBA(w, h int) *image.RGBA {
 // NewRGBA64 creates an RGBA64 image with the specified dimensions
 func (_ Image) NewRGBA64(w, h int) *image.RGBA64 {
 	return image.NewRGBA64(image.Rect(0, 0, w, h))
+}
+
+// NewFloat16 returns a RGBAImage using float16 for each colour component
+func (_ Image) NewFloat16(w, h int) *exr.RGBAImage {
+	return exr.NewFloat16(image.Rect(0, 0, w, h))
+}
+
+// NewFloat32 returns a RGBAImage using float32 for each colour component
+func (_ Image) NewFloat32(w, h int) *exr.RGBAImage {
+	return exr.NewFloat32(image.Rect(0, 0, w, h))
 }
 
 // Fill fills the image in the context with a specific colour
