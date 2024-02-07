@@ -11,7 +11,7 @@ main() {
     // exr as a single file
     try( f := os.Create("test.exr") ) {
         testCardUHD( ctx )
-        render.Exr().Encode(f,ctx.Image())
+        render.Exr().Encoder().Compress(true).Encode(f,ctx.Image())
     }
     try( f := os.Create("test.png") ) {
         testCardUHD( ctx )

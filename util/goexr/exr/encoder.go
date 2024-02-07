@@ -12,11 +12,17 @@ import (
 )
 
 func Encode(w io.Writer, m image.Image) error {
-	var e Encoder
-	return e.Encode(w, m)
+	return NewEncoder().Encode(w, m)
 }
 
-type Encoder struct {
+type Encoder interface {
+	Encode(w io.Writer, m image.Image) error
+	Compress(b bool) Encoder
+	Float16() Encoder
+	Float32() Encoder
+}
+
+type encoder struct {
 	XSampling     int32
 	YSampling     int32
 	dataWindow    exr.Box2i
@@ -24,9 +30,45 @@ type Encoder struct {
 	lineOrder     exr.LineOrder
 	pixelType     exr.PixelType
 	channels      exr.ChannelList
+	compression   exr.Compression
+
+	bounds                 image.Rectangle
+	width, height          int
+	pixelWidth             int
+	lineSize               int
+	pixelSize              int
+	dataSize               int32
+	lineBuffer             []byte
+	aOff, bOff, gOff, rOff int
 }
 
-func (e *Encoder) Encode(w io.Writer, m image.Image) error {
+func NewEncoder() Encoder {
+	return &encoder{
+		pixelType:   exr.PixelTypeHalf,
+		compression: exr.CompressionNone,
+	}
+}
+
+func (e *encoder) Float16() Encoder {
+	e.pixelType = exr.PixelTypeHalf
+	return e
+}
+
+func (e *encoder) Float32() Encoder {
+	e.pixelType = exr.PixelTypeFloat
+	return e
+}
+
+func (e *encoder) Compress(b bool) Encoder {
+	if b {
+		e.compression = exr.CompressionZIP
+	} else {
+		e.compression = exr.CompressionNone
+	}
+	return e
+}
+
+func (e *encoder) Encode(w io.Writer, m image.Image) error {
 	if e.XSampling < 1 {
 		e.XSampling = 1
 	}
@@ -39,9 +81,6 @@ func (e *Encoder) Encode(w io.Writer, m image.Image) error {
 	e.dataWindow = exr.Box2iFromRect(rect)
 	e.displayWindow = exr.Box2iFromRect(rect)
 	e.lineOrder = exr.LineOrderIncreasingY
-
-	e.pixelType = exr.PixelTypeHalf
-	//e.pixelType = exr.PixelTypeFloat
 
 	// For now, we have the fixed R, G, B & A channels
 	e.channels = nil
@@ -62,7 +101,7 @@ func (e *Encoder) Encode(w io.Writer, m image.Image) error {
 	return e.encodeImage(w, m)
 }
 
-func (e *Encoder) writeStart(w io.Writer) (uint64, error) {
+func (e *encoder) writeStart(w io.Writer) (uint64, error) {
 	var offset uint64
 	var b bytes.Buffer
 	err := e.writeHeader(&b)
@@ -74,7 +113,7 @@ func (e *Encoder) writeStart(w io.Writer) (uint64, error) {
 	return offset, err
 }
 
-func (e *Encoder) writeHeader(w io.Writer) error {
+func (e *encoder) writeHeader(w io.Writer) error {
 	err := exr.WriteMagic(w)
 
 	if err == nil {
@@ -88,7 +127,7 @@ func (e *Encoder) writeHeader(w io.Writer) error {
 	}
 
 	if err == nil {
-		err = exr.WriteAttribute(w, exr.AttributeNameCompression, exr.AttributeTypeCompression, exr.CompressionNone)
+		err = exr.WriteAttribute(w, exr.AttributeNameCompression, exr.AttributeTypeCompression, e.compression)
 	}
 
 	if err == nil {
@@ -133,87 +172,180 @@ var (
 )
 
 // encodeImage encodes a normal Image. RGBAImage is handled directly by encodeNative
-func (e *Encoder) encodeImage(w io.Writer, m image.Image) error {
+func (e *encoder) encodeImage(w io.Writer, m image.Image) error {
 	// As these images are usually defined with a pixel array rather than by each component
 	// we need to handle this by component and then line by line
-	bounds := m.Bounds()
-	width := bounds.Max.X - bounds.Min.X + 1
-	height := bounds.Max.Y - bounds.Min.Y + 1
+	e.bounds = m.Bounds()
+	e.width = e.bounds.Max.X - e.bounds.Min.X + 1
+	e.height = e.bounds.Max.Y - e.bounds.Min.Y + 1
 
-	var pixelWidth int
 	switch e.pixelType {
 	case exr.PixelTypeHalf:
-		pixelWidth = 2
+		e.pixelWidth = 2
 	case exr.PixelTypeFloat, exr.PixelTypeUint:
-		pixelWidth = 4
+		e.pixelWidth = 4
 	default:
 		return fmt.Errorf("unknown PixelType %d", e.pixelType)
 	}
 
 	// Each row is y, line size * channelCount followed by that number of bytes
-	lineSize := width * pixelWidth
-	pixelSize := len(e.channels) * lineSize
-	dataSize := int32(pixelSize + 8)
-	lineBuffer := make([]byte, dataSize)
+	e.lineSize = e.width * e.pixelWidth
+	e.pixelSize = len(e.channels) * e.lineSize
+	e.dataSize = int32(e.pixelSize)
+	e.lineBuffer = make([]byte, e.dataSize)
 
-	aOff := 8
-	bOff := aOff + lineSize
-	gOff := bOff + lineSize
-	rOff := gOff + lineSize
+	e.aOff = 0
+	e.bOff = e.aOff + e.lineSize
+	e.gOff = e.bOff + e.lineSize
+	e.rOff = e.gOff + e.lineSize
 
 	offset, err := e.writeStart(w)
 	if err != nil {
 		return err
 	}
 
-	// Point offset to after the chunk headers
-	offset += uint64(8 * height)
+	return e.encodeImageCompressed(w, m, offset)
+}
 
-	for y := bounds.Min.Y; y <= bounds.Max.Y; y++ {
-		if err = exr.Write(w, &offset); err != nil {
+/*func (e *encoder) encodeImageUncompressed(w io.Writer, m image.Image, offset uint64) error {
+	// Point offset to after the chunk headers
+	offset += uint64(8 * e.height)
+
+	for y := e.bounds.Min.Y; y <= e.bounds.Max.Y; y++ {
+		if err := exr.Write(w, &offset); err != nil {
 			return err
 		}
-		offset += uint64(dataSize)
+		offset += uint64(e.dataSize + 8)
 	}
 
-	for y := bounds.Min.Y; y <= bounds.Max.Y; y++ {
-		// Each line starts with the Y then the size in bytes
-		binary.LittleEndian.PutUint32(lineBuffer[0:4], uint32(y))
-		binary.LittleEndian.PutUint32(lineBuffer[4:8], uint32(pixelSize))
-
-		off := 0
-		for x := bounds.Min.X; x <= bounds.Max.X; x++ {
-			r, g, b, a := m.At(x, y).RGBA()
-			switch e.pixelType {
-			case exr.PixelTypeHalf:
-				binary.LittleEndian.PutUint16(lineBuffer[aOff+off:aOff+off+2], float16.Fromfloat32(float32(a)/float32(0xffff)).Bits())
-				binary.LittleEndian.PutUint16(lineBuffer[bOff+off:bOff+off+2], float16.Fromfloat32(float32(b)/float32(0xffff)).Bits())
-				binary.LittleEndian.PutUint16(lineBuffer[gOff+off:gOff+off+2], float16.Fromfloat32(float32(g)/float32(0xffff)).Bits())
-				binary.LittleEndian.PutUint16(lineBuffer[rOff+off:rOff+off+2], float16.Fromfloat32(float32(r)/float32(0xffff)).Bits())
-			case exr.PixelTypeFloat:
-				binary.LittleEndian.PutUint32(lineBuffer[aOff+off:aOff+off+4], math.Float32bits(float32(a&0xffff)/float32(0xffff)))
-				binary.LittleEndian.PutUint32(lineBuffer[bOff+off:bOff+off+4], math.Float32bits(float32(b&0xffff)/float32(0xffff)))
-				binary.LittleEndian.PutUint32(lineBuffer[gOff+off:gOff+off+4], math.Float32bits(float32(g&0xffff)/float32(0xffff)))
-				binary.LittleEndian.PutUint32(lineBuffer[rOff+off:rOff+off+4], math.Float32bits(float32(r&0xffff)/float32(0xffff)))
-			case exr.PixelTypeUint:
-				binary.LittleEndian.PutUint32(lineBuffer[aOff+off:aOff+off+4], a<<16)
-				binary.LittleEndian.PutUint32(lineBuffer[bOff+off:bOff+off+4], b<<16)
-				binary.LittleEndian.PutUint32(lineBuffer[gOff+off:gOff+off+4], g<<16)
-				binary.LittleEndian.PutUint32(lineBuffer[rOff+off:rOff+off+4], r<<16)
-			}
-			off += pixelWidth
+	for y := e.bounds.Min.Y; y <= e.bounds.Max.Y; y++ {
+		err := e.writeScanBlock(y, w)
+		if err == nil {
+			err = e.writeScanline(y, w, m)
 		}
-
-		_, err = w.Write(lineBuffer)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}*/
+
+func (e *encoder) encodeImageCompressed(w io.Writer, m image.Image, offset uint64) error {
+	var compressor exr.Compressor
+	switch e.compression {
+	case exr.CompressionZIP:
+		compressor = exr.NewZipCompressor()
+	case exr.CompressionNone:
+		compressor = exr.NewNopCompressor()
+	default:
+		return fmt.Errorf("compression %d unsupported", e.compression)
+	}
+
+	lc := e.compression.LineCount()
+	fmt.Printf("lineCount %d\n", lc)
+
+	// Compression works on multiple scanlines; so we have to store it in memory first
+	var offsets []uint64
+	var chunks [][]byte
+
+	chunkSize := uint64(0)
+
+	buffer := &bytes.Buffer{}
+	for y := e.bounds.Min.Y; y <= e.bounds.Max.Y; y += lc {
+		buffer.Reset()
+
+		for y1 := 0; y1 < lc && (y+y1) <= e.bounds.Max.Y; y1++ {
+			if err := e.writeScanline(y+y1, buffer, m); err != nil {
+				return err
+			}
+		}
+
+		cb, err := compressor.Compress(buffer.Bytes())
+		if err != nil {
+			return err
+		}
+
+		// Now set the header
+		b := binary.LittleEndian.AppendUint32(nil, uint32(y))
+		b = binary.LittleEndian.AppendUint32(b, uint32(len(cb)))
+		b = append(b, cb...)
+
+		//fmt.Printf("chunk %d offset %d\n", len(chunks), offset)
+		chunks = append(chunks, b)
+		offsets = append(offsets, chunkSize)
+		chunkSize += uint64(len(b))
+	}
+
+	// Now move offsets to include the header & offset table
+	offset += uint64(8 * len(offsets))
+	for i, o := range offsets {
+		offsets[i] = o + offset
+	}
+
+	chunkCount := exr.ChunkCount(e.dataWindow, e.compression)
+	fmt.Printf("offsets %d chunks %d expected %d\n", len(offsets), len(chunks), chunkCount)
+
+	// Finally write the offsets then the chunks
+	if err := exr.Write(w, offsets); err != nil {
+		return err
+	}
+
+	for _, chunk := range chunks {
+		if err := exr.Write(w, chunk); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *encoder) writeScanBlock(y, lc int, w io.Writer) error {
+	// Each line starts with the Y then the size in bytes
+	y0 := uint32(y)
+	ps := uint32(e.pixelSize)
+	err := exr.Write(w, &y0)
+	if err == nil {
+		err = exr.Write(w, &ps)
+	}
+	return err
+}
+
+func (e *encoder) writeScanline(y int, w io.Writer, m image.Image) error {
+	off := 0
+	for x := e.bounds.Min.X; x <= e.bounds.Max.X; x++ {
+		r, g, b, a := m.At(x, y).RGBA()
+		switch e.pixelType {
+		case exr.PixelTypeHalf:
+			binary.LittleEndian.PutUint16(e.lineBuffer[e.aOff+off:e.aOff+off+2], float16.Fromfloat32(float32(a)/float32(0xffff)).Bits())
+			binary.LittleEndian.PutUint16(e.lineBuffer[e.bOff+off:e.bOff+off+2], float16.Fromfloat32(float32(b)/float32(0xffff)).Bits())
+			binary.LittleEndian.PutUint16(e.lineBuffer[e.gOff+off:e.gOff+off+2], float16.Fromfloat32(float32(g)/float32(0xffff)).Bits())
+			binary.LittleEndian.PutUint16(e.lineBuffer[e.rOff+off:e.rOff+off+2], float16.Fromfloat32(float32(r)/float32(0xffff)).Bits())
+		case exr.PixelTypeFloat:
+			binary.LittleEndian.PutUint32(e.lineBuffer[e.aOff+off:e.aOff+off+4], math.Float32bits(float32(a&0xffff)/float32(0xffff)))
+			binary.LittleEndian.PutUint32(e.lineBuffer[e.bOff+off:e.bOff+off+4], math.Float32bits(float32(b&0xffff)/float32(0xffff)))
+			binary.LittleEndian.PutUint32(e.lineBuffer[e.gOff+off:e.gOff+off+4], math.Float32bits(float32(g&0xffff)/float32(0xffff)))
+			binary.LittleEndian.PutUint32(e.lineBuffer[e.rOff+off:e.rOff+off+4], math.Float32bits(float32(r&0xffff)/float32(0xffff)))
+		case exr.PixelTypeUint:
+			binary.LittleEndian.PutUint32(e.lineBuffer[e.aOff+off:e.aOff+off+4], a<<16)
+			binary.LittleEndian.PutUint32(e.lineBuffer[e.bOff+off:e.bOff+off+4], b<<16)
+			binary.LittleEndian.PutUint32(e.lineBuffer[e.gOff+off:e.gOff+off+4], g<<16)
+			binary.LittleEndian.PutUint32(e.lineBuffer[e.rOff+off:e.rOff+off+4], r<<16)
+		}
+		off += e.pixelWidth
+	}
+
+	_, err := w.Write(e.lineBuffer)
+	return err
 }
 
 // encodeNative encodes an RGBAImage directly
-func (e *Encoder) encodeNative(w io.Writer, i *RGBAImage) error {
+func (e *encoder) encodeNative(w io.Writer, i *RGBAImage) error {
 	return fmt.Errorf("unsupported image %T", i)
+}
+
+type lineBuffer struct {
+}
+
+func (e *encoder) newLineBuffer() {
+
 }
