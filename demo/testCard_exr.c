@@ -6,9 +6,10 @@ main() {
     println( "Demo UHD Test Card in EXR format" )
 
     // create a context for 4K resolution
-    //ctx:= animGraphic.New4k()
-    ctx:= animGraphic.New(image.New720p16())//.Scale(1/3.0,1/3.0)
-    //ctx:= animGraphic.New720p().Scale(1/3.0,1/3.0)
+//    ctx:= animGraphic.New4k()
+    ctx:= animGraphic.New(image.New4K16())
+//    ctx:= animGraphic.New(image.New720p())
+//    ctx:= animGraphic.New(image.New720p16())
 
     testCardUHD( ctx )
 
@@ -33,5 +34,4 @@ main() {
     try( encoder := render.New( "test-%05d.exr", 1 ) ) {
         encoder.WriteImage(ctx.Image())
     }
-
 }

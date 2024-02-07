@@ -1,9 +1,11 @@
 package renderer
 
 import (
+	"github.com/golang/freetype/raster"
 	"github.com/llgcode/draw2d/draw2dimg"
 	"github.com/peter-mount/go-anim/graph"
 	"github.com/peter-mount/go-anim/util"
+	"github.com/peter-mount/go-anim/util/goexr/exr"
 	"golang.org/x/image/draw"
 	"image"
 )
@@ -104,7 +106,20 @@ func (c *context) Close() error {
 
 func (c *context) Reset() Context {
 	// Reset the Context state
-	c.gc = draw2dimg.NewGraphicContext(c.img)
+	var painter draw2dimg.Painter
+	switch selectImage := c.img.(type) {
+
+	case *image.RGBA:
+		painter = raster.NewRGBAPainter(selectImage)
+
+	case *exr.RGBAImage:
+		painter = exr.NewRGBAImagePainter(selectImage)
+
+	default:
+		panic("Image type not supported")
+	}
+
+	c.gc = draw2dimg.NewGraphicContextWithPainter(c.img, painter)
 	return c
 }
 

@@ -83,18 +83,6 @@ func (e *encoder) Encode(w io.Writer, m image.Image) error {
 	e.displayWindow = exr.Box2iFromRect(rect)
 	e.lineOrder = exr.LineOrderIncreasingY
 
-	// For now, we have the fixed R, G, B & A channels
-	e.channels = nil
-	for _, n := range components {
-		e.channels = append(e.channels, exr.Channel{
-			Name:      n,
-			PixelType: e.pixelType,
-			Linear:    true,
-			XSampling: e.XSampling,
-			YSampling: e.YSampling,
-		})
-	}
-
 	if ni, ok := m.(*RGBAImage); ok {
 		return e.encodeNative(w, ni)
 	}
@@ -181,6 +169,19 @@ var (
 
 // encodeImage encodes a normal Image. RGBAImage is handled directly by encodeNative
 func (e *encoder) encodeImage(w io.Writer, m image.Image) error {
+
+	// For now, we have the fixed R, G, B & A channels
+	e.channels = nil
+	for _, n := range components {
+		e.channels = append(e.channels, exr.Channel{
+			Name:      n,
+			PixelType: e.pixelType,
+			Linear:    true,
+			XSampling: e.XSampling,
+			YSampling: e.YSampling,
+		})
+	}
+
 	// As these images are usually defined with a pixel array rather than by each component
 	// we need to handle this by component and then line by line
 	e.bounds = m.Bounds()
@@ -212,65 +213,11 @@ func (e *encoder) encodeImage(w io.Writer, m image.Image) error {
 		return err
 	}
 
-	return e.encodeImageCompressed(w, m, offset)
-}
+	cw := exr.NewChunkWriter(e.compression, w, offset, e.lineSize, len(e.channels), e.bounds, e.dataWindow)
 
-func (e *encoder) encodeImageCompressed(w io.Writer, m image.Image, offset uint64) error {
-	var compressor exr.Compressor
-	switch e.compression {
-	case exr.CompressionZIP:
-		compressor = exr.NewZipCompressor()
-	case exr.CompressionNone:
-		compressor = exr.NewNopCompressor()
-	default:
-		return fmt.Errorf("compression %d unsupported", e.compression)
-	}
-
-	lc := e.compression.LineCount()
-
-	// Compression works on multiple scanlines; so we have to store it in memory first
-	var offsets []uint64
-	var chunks [][]byte
-
-	chunkCount := exr.ChunkCount(e.dataWindow, e.compression)
-	offset += uint64(8 * chunkCount)
-
-	buffer := &bytes.Buffer{}
-	for y := e.bounds.Min.Y; y <= e.bounds.Max.Y; y += lc {
-		buffer.Reset()
-
-		for y1 := 0; y1 < lc && (y+y1) <= e.bounds.Max.Y; y1++ {
-			if err := e.writeScanline(y+y1, buffer, m); err != nil {
-				return err
-			}
-		}
-
-		cb, err := compressor.Compress(buffer.Bytes())
-		if err != nil {
-			return err
-		}
-
-		// Now set the header
-		b := binary.LittleEndian.AppendUint32(nil, uint32(y))
-		b = binary.LittleEndian.AppendUint32(b, uint32(len(cb)))
-		b = append(b, cb...)
-
-		chunks = append(chunks, b)
-		offsets = append(offsets, offset)
-		offset += uint64(len(b))
-	}
-
-	// Finally write the offsets then the chunks
-	if err := exr.Write(w, offsets); err != nil {
-		return err
-	}
-
-	for _, chunk := range chunks {
-		if err := exr.Write(w, chunk); err != nil {
-			return err
-		}
-	}
-	return nil
+	return cw.Write(func(y int, w io.Writer) error {
+		return e.writeScanline(y, w, m)
+	})
 }
 
 func (e *encoder) writeScanline(y int, w io.Writer, m image.Image) error {
@@ -301,7 +248,56 @@ func (e *encoder) writeScanline(y int, w io.Writer, m image.Image) error {
 	return err
 }
 
-// encodeNative encodes an RGBAImage directly
+// encodeNative encodes an RGBAImage directly as we keep the channels in the correct format already so
+// this will be more performant than encodeImage
 func (e *encoder) encodeNative(w io.Writer, i *RGBAImage) error {
-	return fmt.Errorf("unsupported image %T", i)
+
+	// Add the fixed RGBA channels - note: although here the order doesn't matter,
+	// keep them alphabetical as we use this order for ordering the channels for each row
+	// and there they must be in this order!
+	e.channels = nil
+	e.addChannel("A", i.channelA)
+	e.addChannel("B", i.channelB)
+	e.addChannel("G", i.channelG)
+	e.addChannel("R", i.channelR)
+
+	offset, err := e.writeStart(w, i)
+	if err != nil {
+		return err
+	}
+
+	cw := exr.NewChunkWriter(e.compression, w, offset, e.lineSize, len(e.channels), i.Bounds(), e.dataWindow)
+
+	return cw.Write(func(y int, w io.Writer) error {
+		var err error
+		for _, ch := range e.channels {
+			switch ch.Name {
+			case "A":
+				err = i.channelA.WriteLine(w, int32(y))
+			case "B":
+				err = i.channelB.WriteLine(w, int32(y))
+			case "G":
+				err = i.channelG.WriteLine(w, int32(y))
+			case "R":
+				err = i.channelR.WriteLine(w, int32(y))
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (e *encoder) addChannel(n string, pd exr.PixelData) {
+	switch pd.PixelType() {
+	case exr.PixelTypeHalf, exr.PixelTypeFloat:
+		e.channels = append(e.channels, exr.Channel{
+			Name:      n,
+			PixelType: e.pixelType,
+			Linear:    true,
+			XSampling: e.XSampling,
+			YSampling: e.YSampling,
+		})
+	}
 }

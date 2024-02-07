@@ -3,10 +3,25 @@ package exr
 import (
 	"bytes"
 	"compress/zlib"
+	"encoding/binary"
+	"fmt"
+	"image"
+	"io"
 )
 
 type Compressor interface {
 	Compress(src []byte) ([]byte, error)
+}
+
+func NewCompressor(c Compression) (Compressor, error) {
+	switch c {
+	case CompressionZIP:
+		return NewZipCompressor(), nil
+	case CompressionNone:
+		return NewNopCompressor(), nil
+	default:
+		return nil, fmt.Errorf("compression %d unsupported", c)
+	}
 }
 
 func NewNopCompressor() Compressor {
@@ -76,4 +91,122 @@ func (d *zipCompressor) Compress(src []byte) ([]byte, error) {
 		return dst, nil
 	}
 	return src, nil
+}
+
+type ChunkWriter struct {
+	compression   Compression
+	bounds        image.Rectangle
+	lc            int
+	initialOffset uint64
+	offset        uint64
+	offsets       []uint64
+	chunks        [][]byte
+	lineSize      int
+	channels      int
+	chunkCount    int
+	w             io.Writer
+	buffer        bytes.Buffer
+}
+
+type ChunkWriterHandler func(y int, w io.Writer) error
+
+func NewChunkWriter(c Compression, w io.Writer, offset uint64, lineSize, channels int, b image.Rectangle, dataWindow Box2i) *ChunkWriter {
+	chunkCount := ChunkCount(dataWindow, c)
+	return &ChunkWriter{
+		compression:   c,
+		bounds:        b,
+		chunkCount:    chunkCount,
+		channels:      channels,
+		initialOffset: offset,
+		offset:        offset + uint64(8*chunkCount),
+		lineSize:      lineSize,
+		w:             w,
+	}
+}
+
+func (cw *ChunkWriter) Write(f ChunkWriterHandler) error {
+	compressor, err := NewCompressor(cw.compression)
+	if err != nil {
+		return err
+	}
+
+	cw.lc = cw.compression.LineCount()
+
+	if cw.compression == CompressionNone {
+		return cw.writeUncompressed(f)
+	}
+	return cw.writeCompressed(compressor, f)
+}
+
+func (cw *ChunkWriter) writeCompressed(compressor Compressor, f ChunkWriterHandler) error {
+	for y := cw.bounds.Min.Y; y <= cw.bounds.Max.Y; y += cw.lc {
+
+		cw.buffer.Reset()
+
+		for y1 := 0; y1 < cw.lc && (y+y1) <= cw.bounds.Max.Y; y1++ {
+			if err := f(y+y1, &cw.buffer); err != nil {
+				return err
+			}
+		}
+
+		cb, err := compressor.Compress(cw.buffer.Bytes())
+		if err != nil {
+			return err
+		}
+
+		b := cw.prefixHeader(y, cb)
+		cw.chunks = append(cw.chunks, b)
+		cw.offsets = append(cw.offsets, cw.offset)
+		cw.offset += uint64(len(b))
+	}
+
+	// Finally write the offsets then the chunks
+	if err := Write(cw.w, cw.offsets); err != nil {
+		return err
+	}
+
+	for _, chunk := range cw.chunks {
+		if err := Write(cw.w, chunk); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (cw *ChunkWriter) writeUncompressed(f ChunkWriterHandler) error {
+	// Create and write the offsets now
+	off := cw.offset
+	dataSize := uint64((cw.lineSize * cw.channels) + 8)
+	for i := 0; i < cw.chunkCount; i++ {
+		cw.offsets = append(cw.offsets, off)
+		off += dataSize
+	}
+
+	err := Write(cw.w, cw.offsets)
+	if err != nil {
+		return err
+	}
+
+	// Now write each line one by one as each one is a chunk in itself
+	for y := cw.bounds.Min.Y; y <= cw.bounds.Max.Y; y++ {
+		cw.buffer.Reset()
+
+		if err = f(y, &cw.buffer); err != nil {
+			return err
+		}
+
+		// Now set the header
+		b := cw.prefixHeader(y, cw.buffer.Bytes())
+		if err = Write(cw.w, b); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (cw *ChunkWriter) prefixHeader(y int, cb []byte) []byte {
+	b := binary.LittleEndian.AppendUint32(nil, uint32(y))
+	b = binary.LittleEndian.AppendUint32(b, uint32(len(cb)))
+	return append(b, cb...)
 }

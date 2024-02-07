@@ -13,6 +13,7 @@ type PixelData interface {
 	WriteLine(w io.Writer, y int32) error
 	Float32(x, y int) float32
 	Set(x, y int, v float32)
+	PixelType() PixelType
 }
 
 func NewNopPixelData(value float32) PixelData {
@@ -24,6 +25,8 @@ func NewNopPixelData(value float32) PixelData {
 type nopPixelData struct {
 	value float32
 }
+
+func (d *nopPixelData) PixelType() PixelType { return -1 }
 
 func (d *nopPixelData) LineSize() int32 {
 	return 0
@@ -52,6 +55,8 @@ func NewUint32PixelData(window Box2i, xSampling, ySampling int32) PixelData {
 type uint32PixelData struct {
 	width int32
 }
+
+func (d *uint32PixelData) PixelType() PixelType { return PixelTypeUint }
 
 func (d *uint32PixelData) LineSize() int32 {
 	return d.width * 4
@@ -91,6 +96,8 @@ type float16PixelData struct {
 	ySampling int32
 	pixels    []float16.Float16
 }
+
+func (d *float16PixelData) PixelType() PixelType { return PixelTypeHalf }
 
 func (d *float16PixelData) LineSize() int32 {
 	width := d.window.Width() / d.xSampling
@@ -137,7 +144,14 @@ func (d *float16PixelData) Set(x, y int, v float32) {
 	offY := (int32(y) - d.window.YMin) / d.ySampling
 	width := d.window.Width() / d.xSampling
 
-	d.pixels[offX+width*offY] = float16.Fromfloat32(v)
+	value := float16.Fromfloat32(v)
+	if value.IsInf(0) {
+		value = float16.Frombits(uint16(0x7bff)) // max value
+	}
+	if value.IsNaN() {
+		value = float16.Frombits(uint16(0x0000)) // min value
+	}
+	d.pixels[offX+width*offY] = value
 }
 
 func NewFloat32PixelData(window Box2i, xSampling, ySampling int32) PixelData {
@@ -157,6 +171,8 @@ type float32PixelData struct {
 	ySampling int32
 	pixels    []float32
 }
+
+func (d *float32PixelData) PixelType() PixelType { return PixelTypeFloat }
 
 func (d *float32PixelData) LineSize() int32 {
 	width := d.window.Width() / d.xSampling

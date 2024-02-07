@@ -41,11 +41,37 @@ type RGBAColor struct {
 //
 // Reinhard tone mapping and gamma correction are performed to convert the
 // color into sRGB space.
-func (c RGBAColor) RGBA() (r, g, b, a uint32) {
+func (c RGBAColor) RGBA() (uint32, uint32, uint32, uint32) {
+	//// tone mapping
+	//floatR := float64(c.R / (c.R + 1.0))
+	//floatG := float64(c.G / (c.G + 1.0))
+	//floatB := float64(c.B / (c.B + 1.0))
+	//
+	//// gamma correction
+	//floatR = math.Pow(floatR, gammaFactor)
+	//floatG = math.Pow(floatG, gammaFactor)
+	//floatB = math.Pow(floatB, gammaFactor)
+	//
+	//// alpha pre-multiplication
+	//floatR *= float64(c.A)
+	//floatG *= float64(c.A)
+	//floatB *= float64(c.A)
+
+	const m = float32(0xFFFF)
+	floatR, floatG, floatB, floatA := RGBA(c.R/m, c.G/m, c.B/m, c.A/m)
+
+	// uint32 conversion
+	return uint32(floatR*m) & 0xFFFF,
+		uint32(floatG*m) & 0xFFFF,
+		uint32(floatB*m) & 0xFFFF,
+		uint32(floatA*m) & 0xFFFF
+}
+
+func RGBA(r, g, b, a float32) (float32, float32, float32, float32) {
 	// tone mapping
-	floatR := float64(c.R / (c.R + 1.0))
-	floatG := float64(c.G / (c.G + 1.0))
-	floatB := float64(c.B / (c.B + 1.0))
+	floatR := float64(r / (r + 1.0))
+	floatG := float64(g / (g + 1.0))
+	floatB := float64(b / (b + 1.0))
 
 	// gamma correction
 	floatR = math.Pow(floatR, gammaFactor)
@@ -53,16 +79,11 @@ func (c RGBAColor) RGBA() (r, g, b, a uint32) {
 	floatB = math.Pow(floatB, gammaFactor)
 
 	// alpha pre-multiplication
-	floatR *= float64(c.A)
-	floatG *= float64(c.A)
-	floatB *= float64(c.A)
-
-	// uint32 conversion
-	r = uint32(floatR*0xFFFF) & 0xFFFF
-	g = uint32(floatG*0xFFFF) & 0xFFFF
-	b = uint32(floatB*0xFFFF) & 0xFFFF
-	a = uint32(c.A*0xFFFF) & 0xFFFF
-	return
+	floatA := float64(a)
+	floatR *= floatA
+	floatG *= floatA
+	floatB *= floatA
+	return float32(floatR), float32(floatG), float32(floatB), float32(floatA)
 }
 
 func rgbaModel(c color.Color) color.Color {
@@ -70,10 +91,11 @@ func rgbaModel(c color.Color) color.Color {
 		return c
 	}
 	r, g, b, a := c.RGBA()
+	const m = float32(0xFFFF)
 	return RGBAColor{
-		R: float32(r) / float32(0xFFFF),
-		G: float32(g) / float32(0xFFFF),
-		B: float32(b) / float32(0xFFFF),
-		A: float32(a) / float32(0xFFFF),
+		R: float32(r) / m,
+		G: float32(g) / m,
+		B: float32(b) / m,
+		A: float32(a) / m,
 	}
 }

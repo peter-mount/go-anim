@@ -31,13 +31,15 @@ func NewFloat16(rect image.Rectangle) *RGBAImage {
 
 func newRGBA(rect image.Rectangle, f func(window exr.Box2i, xSampling, ySampling int32) exr.PixelData) *RGBAImage {
 	window := exr.Box2iFromRect(rect)
-	return &RGBAImage{
+	i := &RGBAImage{
 		rect:     rect,
 		channelR: f(window, 1, 1),
 		channelG: f(window, 1, 1),
 		channelB: f(window, 1, 1),
 		channelA: f(window, 1, 1),
 	}
+
+	return i
 }
 
 // ColorModel returns the RGBAImage's color model.
@@ -69,6 +71,16 @@ func (i *RGBAImage) At(x, y int) color.Color {
 	}
 }
 
+func (i *RGBAImage) GetRGBA(x, y int) (float32, float32, float32, float32) {
+	if !(image.Point{X: x, Y: y}.In(i.rect)) {
+		return 0, 0, 0, 0
+	}
+	return RGBA(i.channelR.Float32(x, y),
+		i.channelG.Float32(x, y),
+		i.channelB.Float32(x, y),
+		i.channelA.Float32(x, y))
+}
+
 func (i *RGBAImage) Set(x, y int, c color.Color) {
 	if (image.Point{X: x, Y: y}.In(i.rect)) {
 		// Convert to our colour model, which we know will always return RGBAColor
@@ -77,5 +89,14 @@ func (i *RGBAImage) Set(x, y int, c color.Color) {
 		i.channelG.Set(x, y, rc.G)
 		i.channelB.Set(x, y, rc.B)
 		i.channelA.Set(x, y, rc.A)
+	}
+}
+
+func (i *RGBAImage) SetRGBA(x, y int, r, g, b, a float32) {
+	if (image.Point{X: x, Y: y}.In(i.rect)) {
+		i.channelR.Set(x, y, r)
+		i.channelG.Set(x, y, g)
+		i.channelB.Set(x, y, b)
+		i.channelA.Set(x, y, a)
 	}
 }
