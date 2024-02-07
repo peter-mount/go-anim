@@ -4,8 +4,10 @@ import (
 	color2 "github.com/peter-mount/go-anim/graph/color"
 	"github.com/peter-mount/go-anim/renderer"
 	"github.com/peter-mount/go-anim/util/goexr/exr"
+	"github.com/peter-mount/go-anim/util/goexr/exr/attributes"
 	"image"
 	"image/color"
+	"image/draw"
 )
 
 type Image struct {
@@ -34,22 +36,35 @@ func (_ Image) New4K() *image.RGBA {
 	return image.NewRGBA(image.Rect(0, 0, Width4K, Height4K))
 }
 
+// New4K16 creates a new RGBA image at 4k resolution and 16-bit float for each component
+func (i Image) New4K16() *exr.RGBAImage {
+	return i.NewFloat16(Width4K, Height4K)
+}
+
 // New2160p creates a new RGBA image at 2160p.
 // This is the same as New4K.
-func (g Image) New2160p() *image.RGBA {
-	return g.New4K()
+func (i Image) New2160p() *image.RGBA {
+	return i.New4K()
 }
 
-// New1080p creates a new RGBA image at 1080p resolution,
-// also known as FHD or Full HD.
-func (_ Image) New1080p() *image.RGBA {
-	return image.NewRGBA(image.Rect(0, 0, Width1080p, Height1080p))
+// New1080p creates a new RGBA image at 1080p resolution, also known as FHD or Full HD.
+func (i Image) New1080p() *image.RGBA {
+	return i.NewRGBA(Width1080p, Height1080p)
 }
 
-// New720p creates a new RGBA image at 720p resolution,
-// also known has HD or HD Ready.
+// New1080p16 creates a new RGBA image with 16-bit floats at 1080p resolution, also known as FHD or Full HD.
+func (i Image) New1080p16() *exr.RGBAImage {
+	return i.NewFloat16(Width1080p, Height1080p)
+}
+
+// New720p creates a new RGBA image at 720p resolution, also known has HD or HD Ready.
 func (_ Image) New720p() *image.RGBA {
 	return image.NewRGBA(image.Rect(0, 0, Width720p, Height720p))
+}
+
+// New720p16 creates a new RGBA image with 16-bit floats at 720p resolution, also known has HD or HD Ready.
+func (i Image) New720p16() *exr.RGBAImage {
+	return i.NewFloat16(Width720p, Height720p)
 }
 
 // NewRGBA creates an RGBA image with the specified dimensions
@@ -83,4 +98,8 @@ func (_ Image) Fill(ctx renderer.Context, background color.Color) {
 
 func (_ Image) Histogram(src image.Image) *color2.Histogram {
 	return color2.NewHistogram().AnalyzeImage(src)
+}
+
+func (_ Image) AddAttributes(src draw.Image) attributes.Image {
+	return attributes.Wrap(src)
 }

@@ -161,9 +161,10 @@ func Decode(in io.Reader) (image.Image, error) {
 			int(displayWindow.XMin), int(displayWindow.YMin),
 			int(displayWindow.XMax+1), int(displayWindow.YMax+1),
 		),
-		channelR: dataChannelR,
-		channelG: dataChannelG,
-		channelB: dataChannelB,
-		channelA: dataChannelA,
+		channelR:               dataChannelR,
+		channelG:               dataChannelG,
+		channelB:               dataChannelB,
+		channelA:               dataChannelA,
+		DefaultImageAttributes: *header.Clone(),
 	}, nil
 }

@@ -1,6 +1,7 @@
 package exr
 
 import (
+	"github.com/peter-mount/go-anim/util/goexr/exr/attributes"
 	"image"
 	"image/color"
 
@@ -12,6 +13,7 @@ import (
 // Even if the original image that is loaded does not contain all of the
 // components, default ones will be assigned.
 type RGBAImage struct {
+	attributes.DefaultImageAttributes
 	rect     image.Rectangle
 	channelR exr.PixelData
 	channelG exr.PixelData

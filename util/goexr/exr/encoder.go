@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/peter-mount/go-anim/util/goexr/exr/attributes"
 	"github.com/peter-mount/go-anim/util/goexr/exr/internal/exr"
 	"github.com/x448/float16"
 	"image"
@@ -101,10 +102,10 @@ func (e *encoder) Encode(w io.Writer, m image.Image) error {
 	return e.encodeImage(w, m)
 }
 
-func (e *encoder) writeStart(w io.Writer) (uint64, error) {
+func (e *encoder) writeStart(w io.Writer, m image.Image) (uint64, error) {
 	var offset uint64
 	var b bytes.Buffer
-	err := e.writeHeader(&b)
+	err := e.writeHeader(&b, m)
 	offset = uint64(b.Len())
 
 	if err == nil {
@@ -113,7 +114,7 @@ func (e *encoder) writeStart(w io.Writer) (uint64, error) {
 	return offset, err
 }
 
-func (e *encoder) writeHeader(w io.Writer) error {
+func (e *encoder) writeHeader(w io.Writer, m image.Image) error {
 	err := exr.WriteMagic(w)
 
 	if err == nil {
@@ -158,6 +159,13 @@ func (e *encoder) writeHeader(w io.Writer) error {
 		err = exr.WriteAttribute(w, exr.AttributeNameScreenWindowWidth, exr.AttributeTypeFloat, &par)
 	}
 
+	// Include any additional attributes
+	if attrs, ok := m.(attributes.ImageAttributes); ok {
+		err = attrs.ForEach(func(a attributes.Attribute) error {
+			return exr.WriteAttributeBytes(w, exr.AttributeName(a.Name), exr.AttributeType(a.Type), int32(len(a.Data)), a.Data)
+		})
+	}
+
 	// Terminate the header
 	if err == nil {
 		_, err = w.Write([]byte{0x00})
@@ -199,7 +207,7 @@ func (e *encoder) encodeImage(w io.Writer, m image.Image) error {
 	e.gOff = e.bOff + e.lineSize
 	e.rOff = e.gOff + e.lineSize
 
-	offset, err := e.writeStart(w)
+	offset, err := e.writeStart(w, m)
 	if err != nil {
 		return err
 	}

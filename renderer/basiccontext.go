@@ -12,8 +12,12 @@ import (
 // start,end are the frame range to cover, frameRate the frame rate of the track
 // whilst duration is the total duration of the track in frames
 func NewContext(width, height int) Context {
+	return New(image.NewRGBA(image.Rect(0, 0, width, height)))
+}
+
+func New(img draw.Image) Context {
 	ctx := &context{}
-	return ctx.SetImage(image.NewRGBA(image.Rect(0, 0, width, height)))
+	return ctx.SetImage(img)
 }
 
 type context struct {

@@ -3,6 +3,7 @@ package exr
 import (
 	"bytes"
 	"fmt"
+	"github.com/peter-mount/go-anim/util/goexr/exr/attributes"
 	"io"
 )
 
@@ -73,12 +74,18 @@ func ReadHeader(in io.Reader, target *Header) error {
 			}
 
 		default:
-			// Skip unknown / unnecessary attributes
+			// Capture all other attributes
+			target.SetAttribute(attributes.Attribute{
+				Name: string(attributeName),
+				Type: string(attributeType),
+				Data: attributeValue,
+			})
 		}
 	}
 }
 
 type Header struct {
+	attributes.DefaultImageAttributes
 	Channels      ChannelList
 	Compression   Compression
 	DataWindow    Box2i

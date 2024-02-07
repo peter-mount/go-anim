@@ -7,9 +7,14 @@ import (
 	draw2d2 "github.com/peter-mount/go-anim/util/draw2d"
 	"github.com/peter-mount/go-anim/util/font"
 	"image/color"
+	"image/draw"
 )
 
 type Graph struct {
+}
+
+func (_ Graph) New(img draw.Image) renderer.Context {
+	return renderer.New(img)
 }
 
 func (g Graph) NewContext() renderer.Context {
