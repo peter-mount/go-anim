@@ -69,22 +69,22 @@ func (i Image) New720p16() *exr.RGBAImage {
 
 // NewRGBA creates an RGBA image with the specified dimensions
 func (_ Image) NewRGBA(w, h int) *image.RGBA {
-	return image.NewRGBA(image.Rect(0, 0, w, h))
+	return image.NewRGBA(image.Rect(0, 0, w-1, h-1))
 }
 
 // NewRGBA64 creates an RGBA64 image with the specified dimensions
 func (_ Image) NewRGBA64(w, h int) *image.RGBA64 {
-	return image.NewRGBA64(image.Rect(0, 0, w, h))
+	return image.NewRGBA64(image.Rect(0, 0, w-1, h-1))
 }
 
 // NewFloat16 returns a RGBAImage using float16 for each colour component
 func (_ Image) NewFloat16(w, h int) *exr.RGBAImage {
-	return exr.NewFloat16(image.Rect(0, 0, w, h))
+	return exr.NewFloat16(image.Rect(0, 0, w-1, h-1))
 }
 
 // NewFloat32 returns a RGBAImage using float32 for each colour component
 func (_ Image) NewFloat32(w, h int) *exr.RGBAImage {
-	return exr.NewFloat32(image.Rect(0, 0, w, h))
+	return exr.NewFloat32(image.Rect(0, 0, w-1, h-1))
 }
 
 // Fill fills the image in the context with a specific colour
