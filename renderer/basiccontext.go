@@ -49,7 +49,7 @@ func (c *context) NewImage() Context {
 	if c.height == 0 {
 		c.height = util.Height4K
 	}
-	return c.SetImage(image.NewRGBA(image.Rect(0, 0, c.width, c.height)))
+	return c.SetImage(image.NewRGBA(image.Rect(0, 0, c.width-1, c.height-1)))
 }
 
 func (c *context) Width() int {
@@ -65,7 +65,7 @@ func (c *context) Center() (float64, float64) {
 }
 
 func (c *context) Bounds() util.Rectangle {
-	return util.Rect(0, 0, float64(c.width), float64(c.height))
+	return util.Rect(0, 0, float64(c.width-1), float64(c.height-1))
 }
 
 func (c *context) Gc() *draw2dimg.GraphicContext {

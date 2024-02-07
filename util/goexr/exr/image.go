@@ -75,10 +75,10 @@ func (i *RGBAImage) GetRGBA(x, y int) (float32, float32, float32, float32) {
 	if !(image.Point{X: x, Y: y}.In(i.rect)) {
 		return 0, 0, 0, 0
 	}
-	return RGBA(i.channelR.Float32(x, y),
+	return i.channelR.Float32(x, y),
 		i.channelG.Float32(x, y),
 		i.channelB.Float32(x, y),
-		i.channelA.Float32(x, y))
+		i.channelA.Float32(x, y)
 }
 
 func (i *RGBAImage) Set(x, y int, c color.Color) {

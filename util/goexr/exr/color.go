@@ -2,7 +2,6 @@ package exr
 
 import (
 	"image/color"
-	"math"
 )
 
 const (
@@ -58,32 +57,12 @@ func (c RGBAColor) RGBA() (uint32, uint32, uint32, uint32) {
 	//floatB *= float64(c.A)
 
 	const m = float32(0xFFFF)
-	floatR, floatG, floatB, floatA := RGBA(c.R/m, c.G/m, c.B/m, c.A/m)
 
 	// uint32 conversion
-	return uint32(floatR*m) & 0xFFFF,
-		uint32(floatG*m) & 0xFFFF,
-		uint32(floatB*m) & 0xFFFF,
-		uint32(floatA*m) & 0xFFFF
-}
-
-func RGBA(r, g, b, a float32) (float32, float32, float32, float32) {
-	// tone mapping
-	floatR := float64(r / (r + 1.0))
-	floatG := float64(g / (g + 1.0))
-	floatB := float64(b / (b + 1.0))
-
-	// gamma correction
-	floatR = math.Pow(floatR, gammaFactor)
-	floatG = math.Pow(floatG, gammaFactor)
-	floatB = math.Pow(floatB, gammaFactor)
-
-	// alpha pre-multiplication
-	floatA := float64(a)
-	floatR *= floatA
-	floatG *= floatA
-	floatB *= floatA
-	return float32(floatR), float32(floatG), float32(floatB), float32(floatA)
+	return uint32(c.R*m) & 0xFFFF,
+		uint32(c.G*m) & 0xFFFF,
+		uint32(c.B*m) & 0xFFFF,
+		uint32(c.A*m) & 0xFFFF
 }
 
 func rgbaModel(c color.Color) color.Color {

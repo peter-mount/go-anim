@@ -42,24 +42,21 @@ func (r *RGBAImagePainter) Paint(ss []raster.Span, done bool) {
 		const m = float32(0xffff)
 		ma := float32(s.Alpha) / m
 		a := (ma + r.ca) - (ma * r.ca)
+		cr, cg, cb := r.cr*a, r.cg*a, r.cb*a
 		if r.Op == draw.Over {
 			for i := s.X0; i < s.X1; i++ {
-				dr, dg, db, da := r.Image.GetRGBA(s.Y, i)
+				dr, dg, db, da := r.Image.GetRGBA(i, s.Y)
+				a1 := da * (1 - a)
 				r.Image.SetRGBA(i, s.Y,
-					(r.cr*a)+(dr*da)-(a*da*dr),
-					(r.cg*a)+(dg*da)-(a*da*dg),
-					(r.cb*a)+(db*da)-(a*da*db),
+					cr+(dr*a1),
+					cg+(dg*a1),
+					cb+(db*a1),
 					a+da-(a*da),
 				)
 			}
 		} else {
 			for i := s.X0; i < s.X1; i++ {
-				r.Image.SetRGBA(i, s.Y,
-					r.cr*a,
-					r.cg*a,
-					r.cb*a,
-					a,
-				)
+				r.Image.SetRGBA(i, s.Y, cr, cg, cb, a)
 			}
 		}
 	}

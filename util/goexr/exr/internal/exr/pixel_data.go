@@ -143,15 +143,7 @@ func (d *float16PixelData) Set(x, y int, v float32) {
 	offX := (int32(x) - d.window.XMin) / d.xSampling
 	offY := (int32(y) - d.window.YMin) / d.ySampling
 	width := d.window.Width() / d.xSampling
-
-	value := float16.Fromfloat32(v)
-	if value.IsInf(0) {
-		value = float16.Frombits(uint16(0x7bff)) // max value
-	}
-	if value.IsNaN() {
-		value = float16.Frombits(uint16(0x0000)) // min value
-	}
-	d.pixels[offX+width*offY] = value
+	d.pixels[offX+width*offY] = float16.Fromfloat32(v)
 }
 
 func NewFloat32PixelData(window Box2i, xSampling, ySampling int32) PixelData {
