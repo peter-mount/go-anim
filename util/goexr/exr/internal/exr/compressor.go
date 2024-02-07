@@ -28,6 +28,31 @@ type zipCompressor struct{}
 func (d *zipCompressor) Compress(src []byte) ([]byte, error) {
 	out := &bytes.Buffer{}
 
+	// interleave scalar
+	result := make([]byte, len(src))
+	i1 := 0
+	i2 := (len(src) + 1) / 2
+	j := 0
+	for j < len(result) {
+		result[i1] = src[j]
+		i1++
+		j++
+
+		if j < len(result) {
+			result[i2] = src[j]
+			i2++
+			j++
+		}
+	}
+
+	// delta encode
+	p := int(result[0])
+	for i := 1; i < len(result); i++ {
+		v := int(result[i]) - p + 128 + 256
+		p = int(result[i])
+		result[i] = byte(v)
+	}
+
 	// Use Zip level 4 not default 6 to improve performance:
 	// https://aras-p.info/blog/2021/08/05/EXR-Zip-compression-levels/
 	// https://github.com/AcademySoftwareFoundation/openexr/pull/1125
@@ -36,7 +61,7 @@ func (d *zipCompressor) Compress(src []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	if _, err := w.Write(src); err != nil {
+	if _, err := w.Write(result); err != nil {
 		return nil, err
 	}
 

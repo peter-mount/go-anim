@@ -207,30 +207,6 @@ func (e *encoder) encodeImage(w io.Writer, m image.Image) error {
 	return e.encodeImageCompressed(w, m, offset)
 }
 
-/*func (e *encoder) encodeImageUncompressed(w io.Writer, m image.Image, offset uint64) error {
-	// Point offset to after the chunk headers
-	offset += uint64(8 * e.height)
-
-	for y := e.bounds.Min.Y; y <= e.bounds.Max.Y; y++ {
-		if err := exr.Write(w, &offset); err != nil {
-			return err
-		}
-		offset += uint64(e.dataSize + 8)
-	}
-
-	for y := e.bounds.Min.Y; y <= e.bounds.Max.Y; y++ {
-		err := e.writeScanBlock(y, w)
-		if err == nil {
-			err = e.writeScanline(y, w, m)
-		}
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}*/
-
 func (e *encoder) encodeImageCompressed(w io.Writer, m image.Image, offset uint64) error {
 	var compressor exr.Compressor
 	switch e.compression {
@@ -243,13 +219,13 @@ func (e *encoder) encodeImageCompressed(w io.Writer, m image.Image, offset uint6
 	}
 
 	lc := e.compression.LineCount()
-	fmt.Printf("lineCount %d\n", lc)
 
 	// Compression works on multiple scanlines; so we have to store it in memory first
 	var offsets []uint64
 	var chunks [][]byte
 
-	chunkSize := uint64(0)
+	chunkCount := exr.ChunkCount(e.dataWindow, e.compression)
+	offset += uint64(8 * chunkCount)
 
 	buffer := &bytes.Buffer{}
 	for y := e.bounds.Min.Y; y <= e.bounds.Max.Y; y += lc {
@@ -271,20 +247,10 @@ func (e *encoder) encodeImageCompressed(w io.Writer, m image.Image, offset uint6
 		b = binary.LittleEndian.AppendUint32(b, uint32(len(cb)))
 		b = append(b, cb...)
 
-		//fmt.Printf("chunk %d offset %d\n", len(chunks), offset)
 		chunks = append(chunks, b)
-		offsets = append(offsets, chunkSize)
-		chunkSize += uint64(len(b))
+		offsets = append(offsets, offset)
+		offset += uint64(len(b))
 	}
-
-	// Now move offsets to include the header & offset table
-	offset += uint64(8 * len(offsets))
-	for i, o := range offsets {
-		offsets[i] = o + offset
-	}
-
-	chunkCount := exr.ChunkCount(e.dataWindow, e.compression)
-	fmt.Printf("offsets %d chunks %d expected %d\n", len(offsets), len(chunks), chunkCount)
 
 	// Finally write the offsets then the chunks
 	if err := exr.Write(w, offsets); err != nil {
@@ -297,17 +263,6 @@ func (e *encoder) encodeImageCompressed(w io.Writer, m image.Image, offset uint6
 		}
 	}
 	return nil
-}
-
-func (e *encoder) writeScanBlock(y, lc int, w io.Writer) error {
-	// Each line starts with the Y then the size in bytes
-	y0 := uint32(y)
-	ps := uint32(e.pixelSize)
-	err := exr.Write(w, &y0)
-	if err == nil {
-		err = exr.Write(w, &ps)
-	}
-	return err
 }
 
 func (e *encoder) writeScanline(y int, w io.Writer, m image.Image) error {
@@ -341,11 +296,4 @@ func (e *encoder) writeScanline(y int, w io.Writer, m image.Image) error {
 // encodeNative encodes an RGBAImage directly
 func (e *encoder) encodeNative(w io.Writer, i *RGBAImage) error {
 	return fmt.Errorf("unsupported image %T", i)
-}
-
-type lineBuffer struct {
-}
-
-func (e *encoder) newLineBuffer() {
-
 }
