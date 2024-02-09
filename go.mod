@@ -5,10 +5,11 @@ go 1.19
 require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/llgcode/draw2d v0.0.0-20231212091825-f55e0c776b44
-	github.com/peter-mount/go-build v0.0.0-20240208185506-976dd78b5a76
+	github.com/peter-mount/go-build v0.0.0-20240201082537-00db099a6fa9
 	github.com/peter-mount/go-kernel/v2 v2.0.3-0.20240119080616-ca3b1f9a9ce3
-	github.com/peter-mount/go-script v0.0.0-20240209140120-79b827e0d4a4
+	github.com/peter-mount/go-script v0.0.0-20240201084233-890960353978
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
+	github.com/x448/float16 v0.8.4
 	golang.org/x/image v0.15.0
 )
 

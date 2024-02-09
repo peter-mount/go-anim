@@ -9,6 +9,10 @@ import (
 
 type PNG struct{}
 
+func (_ PNG) Encoder() RawEncoder {
+	return &png.Encoder{}
+}
+
 func (_ PNG) Decode(r io.Reader) (image.Image, error) {
 	return png.Decode(r)
 }

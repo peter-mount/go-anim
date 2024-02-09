@@ -12,6 +12,14 @@ import (
 // they are stored in memory is directly supported by ffmpeg.
 type Raw struct{}
 
+func (r Raw) Decode(_ io.Reader) (image.Image, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (r Raw) Encoder() RawEncoder {
+	return r
+}
+
 func (r Raw) Encode(w io.Writer, img image.Image) error {
 	b, err := r.EncodeBytes(img)
 	if err != nil {
