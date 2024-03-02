@@ -11,9 +11,8 @@ import (
 
 // TimeCode handles the management of Timecodes during an animation
 type TimeCode struct {
-	frameNum int              // The overall frame number
-	start    TimeCodeFragment // Start TimeCode
-	current  TimeCodeFragment // TimeCode of the current frame
+	start   TimeCodeFragment // Start TimeCode
+	current TimeCodeFragment // TimeCode of the current frame
 }
 
 const (
@@ -23,11 +22,11 @@ const (
 
 // NewTimeCode creates a TimeCode with the specified frame rate
 func NewTimeCode(frameRate int) *TimeCode {
-	return &TimeCode{
-		frameNum: tcStartFrameNum,
-		start:    TimeCodeFragment{frameRate: frameRate},
-		current:  TimeCodeFragment{frameRate: frameRate},
+	tcf := TimeCodeFragment{
+		frameRate: frameRate,
+		frameNum:  tcStartFrameNum,
 	}
+	return &TimeCode{start: tcf, current: tcf}
 }
 
 // FrameRate returns the frame rate of the clip
@@ -42,7 +41,7 @@ func (tc *TimeCode) FrameRateF() float64 {
 // FrameNum is the overall frame number, starting at 1.
 // This can be used when forming file names for individual frame images
 func (tc *TimeCode) FrameNum() int {
-	return tc.frameNum
+	return tc.current.FrameNum()
 }
 
 // StartTimeCode returns the time code of the first frame
@@ -57,10 +56,10 @@ func (tc *TimeCode) TimeCode() TimeCodeFragment {
 
 // Next moves the TimeCode to the next frame.
 func (tc *TimeCode) Next() {
-	// Next frame serial
-	tc.frameNum++
+	// Next frame serial, update both current and actual
+	tc.current.frameNum++
 
-	// Don't optimise caching tc.current as it's not a pointer
+	// Don't optimise caching these as it's not a pointer
 	tc.current.frame++
 	if tc.current.frame >= tc.current.frameRate {
 		tc.current.frame = 0
@@ -78,8 +77,8 @@ func (tc *TimeCode) Next() {
 //
 // This will return an error if the TimeCode has been used for a frame, e.g. Next() has been called.
 func (tc *TimeCode) Set(s string) (*TimeCode, error) {
-	if tc.IsRunning() {
-		return nil, errors.New("cannot Set a running TimeCode")
+	if err1 := tc.assertNotRunning(); err1 != nil {
+		return nil, err1
 	}
 
 	tcf, err := ParseTimeCode(s, tc.FrameRate())
@@ -87,15 +86,30 @@ func (tc *TimeCode) Set(s string) (*TimeCode, error) {
 		return nil, err
 	}
 
+	// Reset all three entries
 	tc.start = tcf
-	tc.current = tc.start
+	tc.current = tcf
 
 	return tc, nil
 }
 
 // IsRunning returns true if the TimeCode is running. Specifically once a frame has been rendered it is running.
 func (tc *TimeCode) IsRunning() bool {
-	return tc.frameNum > tcStartFrameNum
+	return tc.current.frameNum > tcStartFrameNum
+}
+
+func (tc *TimeCode) assertNotRunning() error {
+	if tc.IsRunning() {
+		return errors.New("cannot Set a running TimeCode")
+	}
+	return nil
+}
+
+// Parse returns a TimeCodeFragment for a string, using this TimeCode's framerate
+func (tc *TimeCode) Parse(s string) (TimeCodeFragment, error) {
+	tcf, err := ParseTimeCode(s, tc.start.FrameRate())
+	tcf.frameNum = 0
+	return tcf, err
 }
 
 type TimeCodeFragment struct {
@@ -103,6 +117,7 @@ type TimeCodeFragment struct {
 	sec       int // The current time code
 	frame     int // Frame within the current second
 	frameRate int // Frame Rate
+	frameNum  int // The overall frame number
 }
 
 func ParseTimeCode(s string, frameRate int) (TimeCodeFragment, error) {
@@ -157,6 +172,12 @@ func ParseTimeCode(s string, frameRate int) (TimeCodeFragment, error) {
 	tc.frame = v[3]
 
 	return tc, nil
+}
+
+// FrameNum is the overall frame number, starting at 1.
+// This can be used when forming file names for individual frame images
+func (tc TimeCodeFragment) FrameNum() int {
+	return tc.frameNum
 }
 
 func (tc TimeCodeFragment) TimeCode() string {
@@ -266,21 +287,15 @@ func (tc TimeCodeFragment) IsStartSecond() bool {
 }
 
 func (tc *TimeCode) Write(w io.Writer) error {
-	err := binary.Write(w, binary.BigEndian, tc.frameNum)
-	if err == nil {
-		err = tc.start.Write(w)
-	}
-	return err
+	return tc.start.Write(w)
 }
 
 func ReadTimeCode(r io.Reader) (TimeCode, error) {
 	var tc TimeCode
-	err := binary.Read(r, binary.BigEndian, &tc.frameNum)
+	tcf, err := ReadTimeCodeFragment(r)
 	if err == nil {
-		tc.start, err = ReadTimeCodeFragment(r)
-	}
-	if err == nil {
-		tc.current = tc.start
+		tc.start = tcf
+		tc.current = tcf
 	}
 	return tc, err
 }
@@ -293,6 +308,9 @@ func (tc TimeCodeFragment) Write(w io.Writer) error {
 	if err == nil {
 		err = binary.Write(w, binary.BigEndian, tc.frameRate)
 	}
+	if err == nil {
+		err = binary.Write(w, binary.BigEndian, tc.FrameNum())
+	}
 	return err
 }
 
@@ -304,6 +322,9 @@ func ReadTimeCodeFragment(r io.Reader) (TimeCodeFragment, error) {
 	}
 	if err == nil {
 		err = binary.Read(r, binary.BigEndian, &tc.frameRate)
+	}
+	if err == nil {
+		err = binary.Read(r, binary.BigEndian, &tc.frameNum)
 	}
 	return tc, err
 }
