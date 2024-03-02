@@ -302,6 +302,7 @@ _cornerCalibrationMark(ctx,s, sx, sy) {
 	}
 }
 
+// Left hand gradient of boxes from White at the top to Black at the bottom
 _leftGradient(ctx,s) {
     try( ctx ) {
         gc := ctx.Gc()
@@ -323,6 +324,9 @@ _leftGradient(ctx,s) {
     }
 }
 
+// Right hand gradient consisting of vertical lines.
+// At the top they should be large and visible but getting thinner and more numerous towards the bottom.
+// The bottom should be almost grey. If it shows black then something has gone wrong
 _rightGradient(ctx,s) {
     try( ctx ) {
         gc := ctx.Gc()
@@ -341,6 +345,8 @@ _rightGradient(ctx,s) {
         cols := 7
         for i := 0; i < rows; i=i+1 {
             cdx := (s.dx - 15) / math.Float(cols)
+
+            fmt.Printf("%02d %d %.3f\n",i,cols,cdx)
     
             cx := 0.0
             if (cols % 2) == 0 {
@@ -349,6 +355,7 @@ _rightGradient(ctx,s) {
     
             gc.BeginPath()
             gc.SetLineWidth(cdx / 2.0)
+            fmt.Printf("cdx %.06f %.06f\n",cdx,cdx/2.0)
             for j := 0; j <= cols; j=j+1 {
                 animGraphic.RelLine(gc, x+cx+5, y, 0, cdy)
                 cx = cx + cdx
