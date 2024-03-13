@@ -3,6 +3,7 @@ package io
 import (
 	"fmt"
 	"github.com/peter-mount/go-anim/util/time"
+	"github.com/peter-mount/go-kernel/v2/util"
 	"github.com/peter-mount/go-script/packages"
 	"image"
 	"strings"
@@ -218,21 +219,21 @@ func (s *RenderStreamBase) FrameRateF() float64 {
 	return s.TimeCode().FrameRateF()
 }
 
-// Iterator is returned by a renderer to handle spanning over a range of TimeCode's.
+// iterator is returned by a renderer to handle spanning over a range of TimeCode's.
 // Unlike the iterator returned by TimeCode, this one does not advance the TimeCode when Next() is
 // called as that's done when writing an image.
-type Iterator struct {
+type iterator struct {
 	tc      *time.TimeCode        // Pointer to underlying TimeCode
 	running bool                  // set after first call to Next()
 	last    time.TimeCodeFragment // The last value returned by Next()
 	end     time.TimeCodeFragment // The TimeCodeFragment of the frame after the last frame
 }
 
-func (i *Iterator) HasNext() bool {
+func (i *iterator) HasNext() bool {
 	return i.tc.TimeCode().Before(i.end)
 }
 
-func (i *Iterator) Next() interface{} {
+func (i *iterator) Next() time.TimeCodeFragment {
 	if !i.HasNext() {
 		panic("TimeCodeIterator completed")
 	}
@@ -251,19 +252,41 @@ func (i *Iterator) Next() interface{} {
 	return tc
 }
 
-func (s *RenderStreamBase) runUntil(tcf time.TimeCodeFragment) *Iterator {
+func (i *iterator) ForEach(f func(time.TimeCodeFragment)) {
+	for i.HasNext() {
+		f(i.Next())
+	}
+}
+
+func (i *iterator) ForEachAsync(f func(time.TimeCodeFragment)) {
+	i.ForEachAsync(f)
+}
+
+func (i *iterator) ForEachFailFast(f func(time.TimeCodeFragment) error) error {
+	for i.HasNext() {
+		if err := f(i.Next()); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (i *iterator) Iterator() util.Iterator[time.TimeCodeFragment]        { return i }
+func (i *iterator) ReverseIterator() util.Iterator[time.TimeCodeFragment] { return i }
+
+func (s *RenderStreamBase) runUntil(tcf time.TimeCodeFragment) util.Iterator[time.TimeCodeFragment] {
 	// Add 1 frame as end is the TimeCode of the frame after the iterator
-	return &Iterator{
+	return &iterator{
 		tc:  s.TimeCode(),
 		end: tcf.Add(0, 0, 0, 0, 1),
 	}
 }
 
-func (s *RenderStreamBase) ForFrames(count int) *Iterator {
+func (s *RenderStreamBase) ForFrames(count int) util.Iterator[time.TimeCodeFragment] {
 	return s.runUntil(s.TimeCode().TimeCode().AddFrames(count))
 }
 
-func (s *RenderStreamBase) Until(ts string) (*Iterator, error) {
+func (s *RenderStreamBase) Until(ts string) (util.Iterator[time.TimeCodeFragment], error) {
 	tcf, err := time.ParseTimeCode(ts, s.FrameRate())
 	if err != nil {
 		return nil, err

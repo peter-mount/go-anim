@@ -1,6 +1,7 @@
 package time
 
 import (
+	"github.com/peter-mount/go-kernel/v2/util"
 	"testing"
 )
 
@@ -55,7 +56,7 @@ func TestIterator(t *testing.T) {
 				return
 			}
 
-			var iterator *Iterator
+			var iterator util.Iterator[TimeCodeFragment]
 			switch {
 			case tt.frameCount > 0:
 				iterator = start.ForFrames(tt.frameCount)
@@ -81,10 +82,7 @@ func TestIterator(t *testing.T) {
 
 			var got TimeCodeFragment
 			for iterator.HasNext() {
-				v := iterator.Next()
-				if tcf, ok := v.(TimeCodeFragment); ok {
-					got = tcf
-				}
+				got = iterator.Next()
 			}
 
 			if !expect.Equals(got) {
