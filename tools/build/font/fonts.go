@@ -37,13 +37,14 @@ func (s *FontDownloader) Start() error {
 }
 
 func (s *FontDownloader) extension(arch arch.Arch, target target.Builder, meta *meta.Meta) {
-	destDir := filepath.Join(arch.BaseDir(*s.Encoder.Dest), application.FileName(application.STATIC, "lib"))
+	destDir := filepath.Join(arch.BaseDir(*s.Encoder.Dest), application.FileName(application.STATIC, "font"))
 
 	target.
 		Target(destDir).
 		MkDir(destDir).
-		Echo("DLOAD", destDir).
-		BuildTool("-copydir", "lib", "-d", destDir)
+		Echo("INSTALL", destDir).
+		BuildTool("-copydir", "lib/font",
+			"-d", destDir)
 
 	// Now check we have a lib directory
 	info, err := os.Stat(goScriptFontDir)
