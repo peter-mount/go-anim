@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
+	"github.com/peter-mount/go-build/application"
 	"github.com/peter-mount/go-build/core"
 	"github.com/peter-mount/go-build/util/arch"
 	"github.com/peter-mount/go-build/util/makefile/target"
@@ -36,12 +37,12 @@ func (s *FontDownloader) Start() error {
 }
 
 func (s *FontDownloader) extension(arch arch.Arch, target target.Builder, meta *meta.Meta) {
-	destDir := filepath.Join(arch.BaseDir(*s.Encoder.Dest), "lib")
+	destDir := filepath.Join(arch.BaseDir(*s.Encoder.Dest), application.FileName(application.STATIC, "lib"))
 
 	target.
 		Target(destDir).
 		MkDir(destDir).
-		Echo("WEB", destDir).
+		Echo("DLOAD", destDir).
 		BuildTool("-copydir", "lib", "-d", destDir)
 
 	// Now check we have a lib directory
