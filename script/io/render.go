@@ -49,6 +49,22 @@ func init() {
 		{suffix: ".tar", handler: r.newPngTar},
 	}
 
+	r.encoders = map[string]Encoder{
+		".png":  &PNG{},
+		".jpg":  &JPEG{},
+		".jpeg": &JPEG{},
+		".tiff": &TIFF{},
+		".tif":  &TIFF{},
+	}
+
+	r.decoders = map[string]Decoder{
+		".png":  &PNG{},
+		".jpg":  &JPEG{},
+		".jpeg": &JPEG{},
+		".tiff": &TIFF{},
+		".tif":  &TIFF{},
+	}
+
 	packages.Register("render", r)
 }
 
@@ -59,11 +75,33 @@ type Render struct {
 	png       ImageCodec
 	jpg       ImageCodec
 	tiff      ImageCodec
+	encoders  map[string]Encoder
+	decoders  map[string]Decoder
 }
 
 type rendererHandler struct {
 	suffix  string
 	handler func(fileName string, frameRate int) RenderStream
+}
+
+func (r Render) Encoder(fileName string) (Encoder, error) {
+	for k, h := range r.encoders {
+		if strings.HasSuffix(fileName, k) {
+			return h, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unsupported file type %q", fileName)
+}
+
+func (r Render) Decoder(fileName string) (Decoder, error) {
+	for k, h := range r.decoders {
+		if strings.HasSuffix(fileName, k) {
+			return h, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unsupported file type %q", fileName)
 }
 
 func (r Render) New(fileName string, frameRate int) (RenderStream, error) {
