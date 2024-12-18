@@ -1,13 +1,19 @@
-package script
+package graph
 
 import (
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
 	"github.com/peter-mount/go-anim/renderer"
+	"github.com/peter-mount/go-anim/script/image"
 	draw2d2 "github.com/peter-mount/go-anim/util/draw2d"
 	"github.com/peter-mount/go-anim/util/font"
+	"github.com/peter-mount/go-script/packages"
 	"image/color"
 )
+
+func init() {
+	packages.RegisterPackage(&Graph{})
+}
 
 type Graph struct {
 }
@@ -17,15 +23,15 @@ func (g Graph) NewContext() renderer.Context {
 }
 
 func (g Graph) New720p() renderer.Context {
-	return g.NewSizedContext(Width720p, Height720p)
+	return g.NewSizedContext(image.Width720p, image.Height720p)
 }
 
 func (g Graph) New1080p() renderer.Context {
-	return g.NewSizedContext(Width1080p, Height1080p)
+	return g.NewSizedContext(image.Width1080p, image.Height1080p)
 }
 
 func (g Graph) New4k() renderer.Context {
-	return g.NewSizedContext(Width4K, Height4K)
+	return g.NewSizedContext(image.Width4K, image.Height4K)
 }
 
 func (_ Graph) NewSizedContext(w, h int) renderer.Context {

@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	packages.Register("exif", &Exif{})
+	packages.RegisterPackage(&Exif{})
 }
 
 type Exif struct {

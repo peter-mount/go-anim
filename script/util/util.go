@@ -1,10 +1,16 @@
-package script
+package util
 
 import (
 	"github.com/llgcode/draw2d/draw2dimg"
 	"github.com/peter-mount/go-anim/util"
+	"github.com/peter-mount/go-script/packages"
 	"image/color"
+	"image/draw"
 )
+
+func init() {
+	packages.RegisterPackage(&AnimUtil{})
+}
 
 type AnimUtil struct {
 }
@@ -39,4 +45,8 @@ func (_ AnimUtil) DrawColourBars(gc *draw2dimg.GraphicContext, bounds util.Recta
 
 func (_ AnimUtil) DrawColourBarsVertical(gc *draw2dimg.GraphicContext, bounds util.Rectangle, cols ...color.Color) (float64, float64) {
 	return util.DrawColourBarsVertical(gc, bounds, cols...)
+}
+
+func (_ AnimUtil) NewGraphicContext(img draw.Image) *draw2dimg.GraphicContext {
+	return draw2dimg.NewGraphicContext(img)
 }

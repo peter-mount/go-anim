@@ -1,12 +1,19 @@
-package script
+package image
 
 import (
+	"github.com/peter-mount/go-anim/graph"
 	color2 "github.com/peter-mount/go-anim/graph/color"
+	"github.com/peter-mount/go-anim/graph/filter"
 	"github.com/peter-mount/go-anim/renderer"
 	"github.com/peter-mount/go-anim/util/goexr/exr"
+	"github.com/peter-mount/go-script/packages"
 	"image"
 	"image/color"
 )
+
+func init() {
+	packages.RegisterPackage(&Image{})
+}
 
 type Image struct {
 	Width4K  int
@@ -83,4 +90,28 @@ func (_ Image) Fill(ctx renderer.Context, background color.Color) {
 
 func (_ Image) Histogram(src image.Image) *color2.Histogram {
 	return color2.NewHistogram().AnalyzeImage(src)
+}
+
+func (_ Image) Equalize(h *color2.Histogram, b image.Rectangle) graph.Filter {
+	return filter.EqualizeFilter(h, b)
+}
+
+// Filter applies a graph.Filter on a source image within the specified bounds,
+// writing the result to the destination image.
+//
+// The source and destination image may be the same Image if the filter supports it.
+func (_ Image) Filter(f graph.Filter, src image.Image, dst graph.Image, b image.Rectangle) error {
+	return f.Do(src, dst, b)
+}
+
+// FilterNew applies a graph.Filter on a source image,
+// returning a new mutable image with the new content.
+func (_ Image) FilterNew(f graph.Filter, src image.Image) (graph.Image, error) {
+	return f.DoNew(src)
+}
+
+// FilterOver applies the filter over the supplied mutable image,
+// overwriting its previous state.
+func (_ Image) FilterOver(f graph.Filter, src graph.Image) error {
+	return f.DoOver(src)
 }
