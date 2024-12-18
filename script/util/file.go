@@ -1,17 +1,19 @@
 package util
 
 import (
+	"github.com/peter-mount/go-anim/util/frames"
 	"github.com/peter-mount/go-kernel/v2/util/walk"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 // GetImageFiles returns a list of image files from a directory.
 // The results will be images which are supported and who's names are timestamps.
 // The result will be sorted in the correct order.
-func (u *Util) GetImageFiles(dir string) ([]string, error) {
+func (_ *Util) GetImageFiles(dir string) ([]string, error) {
 	var files []string
 	err := walk.NewPathWalker().
 		Then(func(path string, _ os.FileInfo) error {
@@ -45,4 +47,12 @@ func in(s string, p ...string) bool {
 		}
 	}
 	return false
+}
+
+func (_ *Util) Sequence(interval int, sourceFiles []string) *frames.FrameSet {
+	return frames.Sequence(interval, sourceFiles)
+}
+
+func (_ *Util) SequenceIn(interval int, sourceFiles []string, loc *time.Location) *frames.FrameSet {
+	return frames.SequenceIn(interval, sourceFiles, loc)
 }
