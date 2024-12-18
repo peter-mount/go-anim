@@ -80,7 +80,12 @@ func Sequence(interval int, sourceFiles []string) *FrameSet {
 //
 // loc is the timezone of the images
 func SequenceIn(interval int, sourceFiles []string, loc *time.Location) *FrameSet {
+	// Step between each frame
 	step := time.Duration(interval) * time.Second
+	// this is 1.5x step, used when checking if we need an intermediate step.
+	// If we used step and the next frame is a second late then we get a step which
+	// isn't needed, so this ensures we have a buffer between them
+	step2 := time.Duration(float64(interval)*1.5) * time.Second
 
 	frames := &FrameSet{}
 
@@ -93,7 +98,7 @@ func SequenceIn(interval int, sourceFiles []string, loc *time.Location) *FrameSe
 
 		// Ensure we have frames between steps
 		if lastFrame != nil && step > 0 {
-			for frame.Time.Sub(lastFrame.Time) >= step {
+			for frame.Time.Sub(lastFrame.Time) >= step2 {
 				lastFrame = &Frame{
 					Source:   lastFrame.Source,
 					Time:     lastFrame.Time.Add(step),
