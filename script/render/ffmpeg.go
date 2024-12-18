@@ -68,7 +68,6 @@ func (s *FFMPegSession) init(img image.Image) error {
 		s.fileName,
 	)
 
-	fmt.Println("args", args)
 	s.cmd = exec.Command("ffmpeg", args...)
 
 	s.r, s.w = io.Pipe()
@@ -79,7 +78,7 @@ func (s *FFMPegSession) init(img image.Image) error {
 		s.cmd.Stdout, s.cmd.Stderr = os.Stdout, os.Stderr
 	}
 
-	fmt.Println("cmd", s.cmd)
+	log.Printf("cmd %q", s.cmd)
 
 	return s.cmd.Start()
 }
