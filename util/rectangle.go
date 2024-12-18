@@ -47,6 +47,6 @@ func (r Rectangle) String() string {
 	}, ",")
 }
 
-func (r Rectangle) Rectangle() image.Rectangle {
+func (r Rectangle) Rect() image.Rectangle {
 	return image.Rect(int(r.X1), int(r.Y1), int(r.X2), int(r.Y2))
 }
