@@ -30,10 +30,28 @@ func FitString(l, t, r, b, sl, st, sr, sb float64) (float64, float64, float64, f
 	return math.Min(l, sl), math.Min(t, st), math.Max(r, sr), math.Max(b, sb)
 }
 
-func DrawString(gc *draw2dimg.GraphicContext, x, y float64, s string, a ...interface{}) float64 {
+func DrawStringLeft(gc *draw2dimg.GraphicContext, x, y float64, s string, a ...interface{}) float64 {
+	for _, str := range strings.Split(fmt.Sprintf(s, a...), "\n") {
+		_, st, _, sb := gc.GetStringBounds(str)
+		gc.FillStringAt(str, x, y+(sb-st)/2)
+		y = y - st + sb
+	}
+	return y
+}
+
+func DrawStringCenter(gc *draw2dimg.GraphicContext, x, y float64, s string, a ...interface{}) float64 {
 	for _, str := range strings.Split(fmt.Sprintf(s, a...), "\n") {
 		sl, st, sr, sb := gc.GetStringBounds(str)
 		gc.FillStringAt(str, x-(sr-sl)/2, y+(sb-st)/2)
+		y = y - st + sb
+	}
+	return y
+}
+
+func DrawStringRight(gc *draw2dimg.GraphicContext, x, y float64, s string, a ...interface{}) float64 {
+	for _, str := range strings.Split(fmt.Sprintf(s, a...), "\n") {
+		sl, st, sr, sb := gc.GetStringBounds(str)
+		gc.FillStringAt(str, x-(sr-sl), y+(sb-st)/2)
 		y = y - st + sb
 	}
 	return y
