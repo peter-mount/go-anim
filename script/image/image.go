@@ -60,6 +60,11 @@ const (
 	Height720p  = 720
 )
 
+// New returns a new RGBA image with the specified dimensions
+func (_ *Image) New(w, h int) *image.RGBA {
+	return image.NewRGBA(image.Rect(0, 0, w, h))
+}
+
 // New4K creates a new RGBA image at 4K resolution
 func (_ *Image) New4K() *image.RGBA {
 	return image.NewRGBA(image.Rect(0, 0, Width4K, Height4K))
