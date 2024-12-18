@@ -1,4 +1,4 @@
-package io
+package render
 
 import (
 	"fmt"
@@ -65,7 +65,8 @@ func init() {
 		".tif":  &TIFF{},
 	}
 
-	packages.Register("render", r)
+	//packages.Register("render", r)
+	packages.RegisterPackage(r)
 }
 
 type Render struct {

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"image"
 	"math"
 	"strings"
 )
@@ -44,4 +45,8 @@ func (r Rectangle) String() string {
 		FloatToA(r.X2),
 		FloatToA(r.Y2),
 	}, ",")
+}
+
+func (r Rectangle) Rectangle() image.Rectangle {
+	return image.Rect(int(r.X1), int(r.Y1), int(r.X2), int(r.Y2))
 }

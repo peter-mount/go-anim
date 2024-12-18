@@ -1,4 +1,4 @@
-package script
+package mapper
 
 import (
 	"github.com/peter-mount/go-anim/graph"

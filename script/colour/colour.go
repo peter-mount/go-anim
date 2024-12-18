@@ -1,10 +1,15 @@
-package script
+package colour
 
 import (
 	color4 "github.com/peter-mount/go-anim/graph/color"
 	color2 "github.com/peter-mount/go-anim/util/color"
+	"github.com/peter-mount/go-script/packages"
 	"image/color"
 )
+
+func init() {
+	packages.RegisterPackage(&Colour{})
+}
 
 type Colour struct{}
 
