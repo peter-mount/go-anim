@@ -145,7 +145,7 @@ func (g *Image) FilterOver(f graph.Filter, src graph.Image) error {
 	return f.DoOver(src)
 }
 
-func (_ *Image) DuplicateImage(img image.Image) graph.Image {
+func (_ *Image) Duplicate(img image.Image) graph.Image {
 	return graph.DuplicateImage(img)
 }
 
