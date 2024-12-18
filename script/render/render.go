@@ -49,22 +49,6 @@ func init() {
 		{suffix: ".tar", handler: r.newPngTar},
 	}
 
-	r.encoders = map[string]Encoder{
-		".png":  &PNG{},
-		".jpg":  &JPEG{},
-		".jpeg": &JPEG{},
-		".tiff": &TIFF{},
-		".tif":  &TIFF{},
-	}
-
-	r.decoders = map[string]Decoder{
-		".png":  &PNG{},
-		".jpg":  &JPEG{},
-		".jpeg": &JPEG{},
-		".tiff": &TIFF{},
-		".tif":  &TIFF{},
-	}
-
 	//packages.Register("render", r)
 	packages.RegisterPackage(r)
 }
@@ -76,8 +60,6 @@ type Render struct {
 	png       ImageCodec
 	jpg       ImageCodec
 	tiff      ImageCodec
-	encoders  map[string]Encoder
-	decoders  map[string]Decoder
 }
 
 type rendererHandler struct {

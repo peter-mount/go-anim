@@ -1,15 +1,16 @@
-package render
+package image
 
 import (
 	"fmt"
+	"github.com/peter-mount/go-anim/script/render"
 	"image"
 	"os"
 	"strings"
 )
 
 // Encoder returns an Encoder appropriate for the specified fileName
-func (r Render) Encoder(fileName string) (Encoder, error) {
-	for k, h := range r.encoders {
+func (g *Image) Encoder(fileName string) (render.Encoder, error) {
+	for k, h := range g.encoders {
 		if strings.HasSuffix(fileName, k) {
 			return h, nil
 		}
@@ -19,8 +20,8 @@ func (r Render) Encoder(fileName string) (Encoder, error) {
 }
 
 // Decoder returns a Decoder appropriate for the specified fileName
-func (r Render) Decoder(fileName string) (Decoder, error) {
-	for k, h := range r.decoders {
+func (g *Image) Decoder(fileName string) (render.Decoder, error) {
+	for k, h := range g.decoders {
 		if strings.HasSuffix(fileName, k) {
 			return h, nil
 		}
@@ -30,8 +31,8 @@ func (r Render) Decoder(fileName string) (Decoder, error) {
 }
 
 // WriteImage writes a single image to the specified fileName
-func (r Render) WriteImage(fileName string, img image.Image) error {
-	encoder, err := r.Encoder(fileName)
+func (g *Image) WriteImage(fileName string, img image.Image) error {
+	encoder, err := g.Encoder(fileName)
 	if err != nil {
 		return err
 	}
@@ -46,8 +47,8 @@ func (r Render) WriteImage(fileName string, img image.Image) error {
 }
 
 // ReadImage reads a single image from a file
-func (r Render) ReadImage(fileName string) (image.Image, error) {
-	decoder, err := r.Decoder(fileName)
+func (g *Image) ReadImage(fileName string) (image.Image, error) {
+	decoder, err := g.Decoder(fileName)
 	if err != nil {
 		return nil, err
 	}
