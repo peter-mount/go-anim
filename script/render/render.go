@@ -85,26 +85,6 @@ type rendererHandler struct {
 	handler func(fileName string, frameRate int) RenderStream
 }
 
-func (r Render) Encoder(fileName string) (Encoder, error) {
-	for k, h := range r.encoders {
-		if strings.HasSuffix(fileName, k) {
-			return h, nil
-		}
-	}
-
-	return nil, fmt.Errorf("unsupported file type %q", fileName)
-}
-
-func (r Render) Decoder(fileName string) (Decoder, error) {
-	for k, h := range r.decoders {
-		if strings.HasSuffix(fileName, k) {
-			return h, nil
-		}
-	}
-
-	return nil, fmt.Errorf("unsupported file type %q", fileName)
-}
-
 func (r Render) New(fileName string, frameRate int) (RenderStream, error) {
 	for _, h := range r.renderers {
 		if strings.HasSuffix(fileName, h.suffix) {
