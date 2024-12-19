@@ -26,11 +26,6 @@ func getInterpolationFunction(interp string) resize.InterpolationFunction {
 	return resize.NearestNeighbor
 }
 
-// Crop will crop an image to fit the required bounds
-func (_ *Image) Crop(src image.Image, bounds image.Rectangle) graph.Image {
-	return graph.Crop(src, bounds)
-}
-
 // Expand will add the specified number of pixels to the edges of an Image
 func (_ *Image) Expand(src image.Image, top, left, bottom, right int) graph.Image {
 	return graph.Expand(src, top, left, bottom, right)

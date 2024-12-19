@@ -14,12 +14,15 @@ import (
 
 func init() {
 	p := &Image{
-		Width4K:     3840,
-		Height4K:    2160,
-		Width1080p:  Width1080p,
-		Height1080p: Height1080p,
-		Width720p:   Width720p,
-		Height720p:  Height720p,
+		Width4K:         3840,
+		Height4K:        2160,
+		Width1080p:      Width1080p,
+		Height1080p:     Height1080p,
+		Width720p:       Width720p,
+		Height720p:      Height720p,
+		BlackMaskFilter: filter.BlackMaskFilter,
+		WhiteMaskFilter: filter.WhiteMaskFilter,
+
 		encoders: map[string]render.Encoder{
 			".png":  &render.PNG{},
 			".jpg":  &render.JPEG{},
@@ -27,6 +30,7 @@ func init() {
 			".tiff": &render.TIFF{},
 			".tif":  &render.TIFF{},
 		},
+
 		decoders: map[string]render.Decoder{
 			".png":  &render.PNG{},
 			".jpg":  &render.JPEG{},
@@ -40,12 +44,14 @@ func init() {
 }
 
 type Image struct {
-	Width4K     int
-	Height4K    int
-	Width1080p  int
-	Height1080p int
-	Width720p   int
-	Height720p  int
+	Width4K         int
+	Height4K        int
+	Width1080p      int
+	Height1080p     int
+	Width720p       int
+	Height720p      int
+	BlackMaskFilter graph.Filter
+	WhiteMaskFilter graph.Filter
 
 	encoders map[string]render.Encoder
 	decoders map[string]render.Decoder
