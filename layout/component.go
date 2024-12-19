@@ -44,6 +44,10 @@ type BaseComponent struct {
 	inset          int
 }
 
+func (c *BaseComponent) SetPainter(painter Painter) {
+	c.painter = painter
+}
+
 func (c *BaseComponent) IsUpdateRequired() bool {
 	return c.updateRequired
 }
