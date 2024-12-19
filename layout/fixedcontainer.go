@@ -28,6 +28,7 @@ func (c *fixedContainer) forceBounds() {
 }
 
 func (c *fixedContainer) Layout(ctx draw2d.GraphicContext) bool {
+	//fmt.Println(c.GetType(), c.Bounds())
 	if c.updateRequired {
 		c.forceBounds()
 	}

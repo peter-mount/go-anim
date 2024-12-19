@@ -24,6 +24,7 @@ func (c *rowContainer) Layout(ctx draw2d.GraphicContext) bool {
 	bounds := c.Bounds()
 
 	c.FitToWidth()
+	//fmt.Println("rct", c.Bounds())
 
 	c.BaseComponent.paint(ctx.(*draw2dimg.GraphicContext), func(gc *draw2dimg.GraphicContext) {
 		y := bounds.Min.Y
@@ -32,9 +33,10 @@ func (c *rowContainer) Layout(ctx draw2d.GraphicContext) bool {
 			dy := cb.Dy()
 			cb.Min.Y = y
 			cb.Max.Y = y + dy
-			cb.Min.X = bounds.Min.X
-			cb.Max.X = bounds.Max.X
+			cb.Min.X = 0
+			cb.Max.X = bounds.Dx()
 			comp.SetBounds(cb)
+			//fmt.Println("rct", comp.GetType(), comp.Bounds())
 			y = y + dy
 		}
 		bounds.Max.Y = y

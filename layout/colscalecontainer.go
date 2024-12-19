@@ -31,6 +31,7 @@ func (c *colScaleContainer) Layout(ctx draw2d.GraphicContext) bool {
 
 	// Get max height of this row
 	c.FitToHeight()
+	//fmt.Println("csc", c.Bounds())
 
 	bounds := c.Bounds()
 	c.BaseComponent.paint(ctx.(*draw2dimg.GraphicContext), func(gc *draw2dimg.GraphicContext) {
@@ -50,6 +51,7 @@ func (c *colScaleContainer) Layout(ctx draw2d.GraphicContext) bool {
 				cb.Max.Y = bounds.Dy()
 
 				comp.SetBounds(cb)
+				//fmt.Println("csc", comp.GetType(), comp.Bounds())
 
 				// Move to next component
 				bounds.Min.X = cb.Max.X
