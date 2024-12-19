@@ -24,7 +24,7 @@ func newContainerBuilder(parent any, builder *Builder, comp layout.Container) *C
 	return cb
 }
 
-func (b *ContainerBuilder) addComponent(name string, comp layout.Component) (any, error) {
+func (b *ContainerBuilder) AddComponent(name string, comp layout.Component) (any, error) {
 	if err := b.builder.add(name, comp); err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (b *ContainerBuilder) FixedContainer(width, height int) (any, error) {
 }
 
 func (b *ContainerBuilder) Image(name string) (any, error) {
-	return b.addComponent(name, layout.NewImage())
+	return b.AddComponent(name, layout.NewImage())
 }
 
 func (b *ContainerBuilder) RowContainer() (any, error) {
@@ -56,5 +56,5 @@ func (b *ContainerBuilder) RowContainer() (any, error) {
 }
 
 func (b *ContainerBuilder) Text(name, format string, args ...any) (any, error) {
-	return b.addComponent(name, layout.NewText(format, args...))
+	return b.AddComponent(name, layout.NewText(format, args...))
 }
