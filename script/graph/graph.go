@@ -3,6 +3,7 @@ package graph
 import (
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
+	"github.com/peter-mount/go-anim/graph"
 	"github.com/peter-mount/go-anim/renderer"
 	"github.com/peter-mount/go-anim/script/image"
 	draw2d2 "github.com/peter-mount/go-anim/util/draw2d"
@@ -47,14 +48,7 @@ func (_ Graph) ParseFont(s string) (font.Font, error) {
 }
 
 func (_ Graph) SetFont(gc *draw2dimg.GraphicContext, s string) error {
-	f, err := font.ParseFont(s)
-	if err != nil {
-		return err
-	}
-
-	gc.SetFontData(f.FontData())
-	gc.SetFontSize(f.Size())
-	return nil
+	return graph.SetFont(gc, s)
 }
 
 func (_ Graph) FillPoly(gc *draw2dimg.GraphicContext, c color.Color, v ...float64) {
