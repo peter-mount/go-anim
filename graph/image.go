@@ -117,14 +117,18 @@ func AutoCrop(src image.Image) Image {
 	return DuplicateImage(src)
 }
 
-func isBlack(c color.Color) bool {
-	r, g, b, a := c.RGBA()
-	return a == 0 || (r == 0 && g == 0 && b == 0)
+func IsBlack(c color.Color) bool {
+	return !IsNotBlack(c)
+}
+
+func IsNotBlack(c color.Color) bool {
+	r1, g1, b1, a1 := c.RGBA()
+	return a1 == 0 || (r1 != 0 && g1 != 0 && b1 != 0)
 }
 
 func isBlackRow(src image.Image, y, x0, x1 int) bool {
 	for x := x0; x <= x1; x++ {
-		if !isBlack(src.At(x, y)) {
+		if IsNotBlack(src.At(x, y)) {
 			return false
 		}
 	}
@@ -133,9 +137,19 @@ func isBlackRow(src image.Image, y, x0, x1 int) bool {
 
 func isBlackCol(src image.Image, x, y0, y1 int) bool {
 	for y := y0; y <= y1; y++ {
-		if !isBlack(src.At(x, y)) {
+		if IsNotBlack(src.At(x, y)) {
 			return false
 		}
 	}
 	return true
+}
+
+func Mask(img, mask image.Image) (Image, error) {
+	return Of(func(x, y int, col color.Color) (color.Color, error) {
+		if IsNotBlack(mask.At(x, y)) {
+			return col, nil
+		}
+		return color.Black, nil
+	}).
+		DoNew(img)
 }
