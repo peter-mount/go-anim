@@ -52,7 +52,7 @@ func (i *Image) paint(gc *draw2dimg.GraphicContext) {
 	ib := img.Bounds()
 
 	if !cb.Eq(ib) {
-		img = resize.Resize(uint(cb.Dx()), 0 /*uint(cb.Dy())*/, img, resize.NearestNeighbor)
+		img = resize.Resize(uint(cb.Dx()-i.inset), 0 /*uint(cb.Dy())*/, img, resize.NearestNeighbor)
 	}
 
 	gc.DrawImage(img)

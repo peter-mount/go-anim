@@ -19,6 +19,7 @@ type Component interface {
 	Layout(draw2d.GraphicContext) bool
 	Width() int
 	Height() int
+	Inset(int)
 	Align(string)
 	Font(string)
 	SetType(string)
@@ -38,10 +39,15 @@ type BaseComponent struct {
 	fill           color.Color
 	stroke         color.Color
 	lineWidth      float64
+	inset          int
 }
 
 func (c *BaseComponent) SetType(t string) {
 	c.Type = t
+}
+
+func (c *BaseComponent) Inset(inset int) {
+	c.inset = inset
 }
 
 func (c *BaseComponent) Stroke(col color.Color) {
@@ -101,7 +107,7 @@ func (c *BaseComponent) paint(gc *draw2dimg.GraphicContext, painter Painter) {
 	if c.painter != nil {
 		gc.Save()
 		defer gc.Restore()
-		gc.Translate(float64(c.bounds.Min.X), float64(c.bounds.Min.Y))
+		gc.Translate(float64(c.bounds.Min.X+c.inset), float64(c.bounds.Min.Y+c.inset))
 
 		if c.font != "" {
 			_ = graph.SetFont(gc, c.font)

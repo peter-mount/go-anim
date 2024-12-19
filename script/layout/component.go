@@ -37,6 +37,11 @@ func (b *ComponentBuilder) Font(font string) any {
 	return b.this
 }
 
+func (b *ComponentBuilder) Inset(inset int) any {
+	b.comp.Inset(inset)
+	return b.this
+}
+
 func (b *ComponentBuilder) LineWidth(w float64) any {
 	b.comp.LineWidth(w)
 	return b.this
