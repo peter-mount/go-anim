@@ -23,9 +23,9 @@ type colScaleContainer struct {
 }
 
 func (c *colScaleContainer) Layout(ctx draw2d.GraphicContext) bool {
-	if !c.container.Layout(ctx) {
-		return false
-	}
+	//if !c.container.Layout(ctx) {
+	//	return false
+	//}
 
 	//fmt.Printf("\nLayout %q\t%v\n", c.Type, c.scales)
 
