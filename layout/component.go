@@ -13,10 +13,12 @@ type Painter func(*draw2dimg.GraphicContext)
 
 // Component is an entity within a frame
 type Component interface {
+	GetType() string
 	Bounds() image.Rectangle
 	SetBounds(image.Rectangle)
 	Draw(draw2d.GraphicContext)
 	Layout(draw2d.GraphicContext) bool
+	IsUpdateRequired() bool
 	Width() int
 	Height() int
 	Inset(int)
@@ -42,8 +44,16 @@ type BaseComponent struct {
 	inset          int
 }
 
+func (c *BaseComponent) IsUpdateRequired() bool {
+	return c.updateRequired
+}
+
 func (c *BaseComponent) SetType(t string) {
 	c.Type = t
+}
+
+func (c *BaseComponent) GetType() string {
+	return c.Type
 }
 
 func (c *BaseComponent) Inset(inset int) {
@@ -83,6 +93,7 @@ func (c *BaseComponent) Bounds() image.Rectangle {
 func (c *BaseComponent) SetBounds(b image.Rectangle) {
 	c.bounds = b
 	c.updateRequired = true
+	//fmt.Printf("SetBounds %q %v\n", c.Type, c.bounds)
 }
 
 func (c *BaseComponent) Width() int {
@@ -107,6 +118,7 @@ func (c *BaseComponent) paint(gc *draw2dimg.GraphicContext, painter Painter) {
 	if c.painter != nil {
 		gc.Save()
 		defer gc.Restore()
+		//fmt.Printf("translate %q\t%d, %d\n", c.Type, c.bounds.Min.X+c.inset, c.bounds.Min.Y+c.inset)
 		gc.Translate(float64(c.bounds.Min.X+c.inset), float64(c.bounds.Min.Y+c.inset))
 
 		if c.font != "" {

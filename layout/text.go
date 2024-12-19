@@ -5,7 +5,6 @@ import (
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
 	"github.com/peter-mount/go-anim/util"
-	"math"
 )
 
 type Text struct {
@@ -47,7 +46,7 @@ func (t *Text) Layout(ctx draw2d.GraphicContext) bool {
 		if bounds.Dx() == 0 {
 			bounds.Max.X = bounds.Min.X + int(t.r-t.l)
 		}
-		bounds.Max.Y = bounds.Min.Y + int(-math.Floor(t.top))
+		bounds.Max.Y = bounds.Min.Y + int(t.b-t.top)
 		t.SetBounds(bounds)
 	})
 
@@ -57,14 +56,16 @@ func (t *Text) Layout(ctx draw2d.GraphicContext) bool {
 
 func (t *Text) paint(gc *draw2dimg.GraphicContext) {
 	bounds := t.Bounds()
-	s := t.String()
+	y := float64(bounds.Dy() >> 1)
 	switch t.alignment {
 	case LeftAlignment:
-		util.DrawStringLeft(gc, 0, float64(bounds.Dy())-t.b, s)
+		util.DrawStringLeft(gc, 0, y, t.format, t.args...)
+
 	case CenterAlignment:
-		util.DrawStringCenter(gc, float64(bounds.Dx())-t.b, float64(bounds.Dy())/2, s)
+		util.DrawStringCenter(gc, float64(bounds.Dx())/2, y, t.format, t.args...)
+
 	case RightAlignment:
-		util.DrawStringRight(gc, float64(bounds.Dx()), float64(bounds.Dy())-t.b, s)
+		util.DrawStringRight(gc, float64(bounds.Dx()), y, t.format, t.args...)
 	}
 }
 

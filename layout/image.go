@@ -22,21 +22,35 @@ func NewImage() *Image {
 	return i
 }
 
-func (i *Image) Layout(_ draw2d.GraphicContext) bool {
+func (i *Image) Layout(ctx draw2d.GraphicContext) bool {
 	//if !i.updateRequired {
 	//	return false
 	//}
 
+	i.updateRequired = false
+
 	cb := i.Bounds()
-	if i.image != nil && cb.Dx() == 0 && cb.Dy() == 0 {
-		ib := i.image.Bounds()
-		w := min(ib.Dx(), ib.Dy())
-		cb.Max.X = cb.Min.X + w
-		cb.Max.Y = cb.Min.Y + w
-		i.SetBounds(cb)
+	if i.image != nil {
+		if cb.Dx() == 0 && cb.Dy() == 0 {
+			ib := i.image.Bounds()
+			w := min(ib.Dx(), ib.Dy())
+			cb.Max.X = cb.Min.X + w
+			cb.Max.Y = cb.Min.Y + w
+			i.SetBounds(cb)
+		}
+
+		img := i.image
+		ib := img.Bounds()
+
+		if !cb.Eq(ib) {
+			// FIXME work out new size without creating an image then throwing it away
+			img = resize.Resize(uint(cb.Dx()-i.inset), 0, img, resize.NearestNeighbor)
+			ib = img.Bounds()
+			cb.Max = cb.Min.Add(image.Pt(ib.Dx(), ib.Dy()))
+			i.SetBounds(cb)
+		}
 	}
 
-	i.updateRequired = false
 	return true
 }
 
@@ -52,7 +66,10 @@ func (i *Image) paint(gc *draw2dimg.GraphicContext) {
 	ib := img.Bounds()
 
 	if !cb.Eq(ib) {
-		img = resize.Resize(uint(cb.Dx()-i.inset), 0 /*uint(cb.Dy())*/, img, resize.NearestNeighbor)
+		img = resize.Resize(uint(cb.Dx()-i.inset-i.inset), 0, img, resize.NearestNeighbor)
+		ib = img.Bounds()
+		cb.Max = cb.Min.Add(image.Pt(ib.Dx()+(i.inset<<1), ib.Dy()+(i.inset<<1)))
+		i.SetBounds(cb)
 	}
 
 	gc.DrawImage(img)

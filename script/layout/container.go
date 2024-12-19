@@ -3,6 +3,7 @@ package layout
 import (
 	"github.com/peter-mount/go-anim/layout"
 	"image"
+	"strconv"
 )
 
 type ContainerBuilder struct {
@@ -32,6 +33,8 @@ func (b *ContainerBuilder) addComponent(name string, comp layout.Component) (any
 }
 
 func (b *ContainerBuilder) addContainer(comp layout.Container) (any, error) {
+	b.builder.seq++
+	comp.SetType(comp.GetType() + strconv.Itoa(b.builder.seq))
 	b.comp.Add(comp)
 	return newContainerBuilder(b, b.builder, comp), nil
 }

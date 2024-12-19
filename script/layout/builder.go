@@ -13,6 +13,7 @@ type Builder struct {
 type common struct {
 	components map[string]layout.Component
 	root       layout.Container
+	seq        int
 }
 
 func (*Package) New(width, height int) any {
