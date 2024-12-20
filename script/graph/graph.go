@@ -10,6 +10,7 @@ import (
 	"github.com/peter-mount/go-anim/util/font"
 	"github.com/peter-mount/go-script/packages"
 	"image/color"
+	"image/draw"
 )
 
 func init() {
@@ -37,6 +38,10 @@ func (g Graph) New4k() renderer.Context {
 
 func (_ Graph) NewSizedContext(w, h int) renderer.Context {
 	return renderer.NewContext(w, h)
+}
+
+func (_ Graph) NewImageContext(img draw.Image) renderer.Context {
+	return renderer.NewImageContext(img)
 }
 
 func (_ Graph) NewFont(name string, size float64, family draw2d.FontFamily, style draw2d.FontStyle) font.Font {
