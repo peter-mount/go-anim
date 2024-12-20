@@ -5,6 +5,11 @@ import (
 	"image"
 )
 
-func (g *Image) Mask(img, mask image.Image) (graph.Image, error) {
+func (*Image) Mask(img, mask image.Image) (graph.Image, error) {
 	return graph.Mask(img, mask)
+}
+
+// DrawMask draw img with mask over dest into a new image
+func (*Image) DrawMask(img, mask, dest image.Image) (graph.Image, error) {
+	return graph.DrawMask(img, mask, dest)
 }

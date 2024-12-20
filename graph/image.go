@@ -153,3 +153,15 @@ func Mask(img, mask image.Image) (Image, error) {
 	}).
 		DoNew(img)
 }
+
+// DrawMask draws img over dest using mask to select which pixels in img are to be
+// copied over. This returns a new image
+func DrawMask(img, mask, dest image.Image) (Image, error) {
+	return Of(func(x, y int, col color.Color) (color.Color, error) {
+		if IsNotBlack(mask.At(x, y)) {
+			return img.At(x, y), nil
+		}
+		return col, nil
+	}).
+		DoNew(dest)
+}
