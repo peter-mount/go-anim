@@ -46,7 +46,7 @@ func (t *Text) Layout(ctx draw2d.GraphicContext) bool {
 		if bounds.Dx() == 0 {
 			bounds.Max.X = bounds.Min.X + int(t.r-t.l)
 		}
-		bounds.Max.Y = bounds.Min.Y + int(t.b-t.top)
+		bounds.Max.Y = bounds.Min.Y + int(t.b-t.top) + 4
 		t.SetBounds(bounds)
 	})
 
@@ -56,7 +56,7 @@ func (t *Text) Layout(ctx draw2d.GraphicContext) bool {
 
 func (t *Text) paint(gc *draw2dimg.GraphicContext) {
 	bounds := t.Bounds()
-	y := float64(bounds.Dy() >> 1)
+	y := float64(bounds.Dy()>>1) - 2
 	switch t.alignment {
 	case LeftAlignment:
 		util.DrawStringLeft(gc, 0, y, t.format, t.args...)
