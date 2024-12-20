@@ -94,6 +94,10 @@ func (c *BaseComponent) Bounds() image.Rectangle {
 	return c.bounds
 }
 
+func (c *BaseComponent) InsetBounds() image.Rectangle {
+	return c.bounds.Inset(c.inset)
+}
+
 func (c *BaseComponent) SetBounds(b image.Rectangle) {
 	c.bounds = b
 	c.updateRequired = true

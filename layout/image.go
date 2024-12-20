@@ -42,9 +42,12 @@ func (i *Image) Layout(ctx draw2d.GraphicContext) bool {
 		img := i.image
 		ib := img.Bounds()
 
+		// Now use the inset bounds for the image
+		cb = i.InsetBounds()
+
 		if !cb.Eq(ib) {
 			// FIXME work out new size without creating an image then throwing it away
-			img = resize.Resize(uint(cb.Dx()-i.inset), 0, img, resize.NearestNeighbor)
+			img = resize.Resize(uint(cb.Dx()), 0, img, resize.NearestNeighbor)
 			ib = img.Bounds()
 			cb.Max = cb.Min.Add(image.Pt(ib.Dx(), ib.Dy()))
 			i.SetBounds(cb)
