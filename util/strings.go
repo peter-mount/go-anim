@@ -187,7 +187,9 @@ func (a Alignment) Metrics(gc *draw2dimg.GraphicContext, bounds image.Rectangle,
 
 func (m *AlignmentMetrics) leftX(int) float64 { return float64(m.Bounds.Min.X) }
 
-func (m *AlignmentMetrics) centerX(i int) float64 { return float64(m.Bounds.Dx()) - (m.Widths[i] / 2) }
+func (m *AlignmentMetrics) centerX(i int) float64 {
+	return (float64(m.Bounds.Dx()) / 2) - (m.Widths[i] / 2)
+}
 
 func (m *AlignmentMetrics) rightX(i int) float64 { return float64(m.Bounds.Dx()) - m.Widths[i] }
 
