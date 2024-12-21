@@ -4,6 +4,7 @@ import (
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
 	"github.com/peter-mount/go-anim/graph"
+	"github.com/peter-mount/go-anim/util"
 	"image"
 	"image/color"
 	"strings"
@@ -36,7 +37,7 @@ type BaseComponent struct {
 	bounds         image.Rectangle // bounds of this container
 	painter        Painter         // function to render this component
 	font           string          // Font to use
-	alignment      Alignment       // Text Alignment
+	alignment      util.Alignment  // Text Alignment
 	updateRequired bool
 	fill           color.Color
 	stroke         color.Color
@@ -152,20 +153,12 @@ func (c *BaseComponent) paint(gc *draw2dimg.GraphicContext, painter Painter) {
 func (c *BaseComponent) Align(s string) {
 	switch strings.ToLower(strings.TrimSpace(s)) {
 	case "left":
-		c.alignment = LeftAlignment
+		c.alignment = util.LeftAlignment
 	case "right":
-		c.alignment = RightAlignment
+		c.alignment = util.RightAlignment
 	case "center":
-		c.alignment = CenterAlignment
+		c.alignment = util.CenterAlignment
 	default:
-		c.alignment = LeftAlignment
+		c.alignment = util.LeftAlignment
 	}
 }
-
-type Alignment uint8
-
-const (
-	LeftAlignment Alignment = iota
-	CenterAlignment
-	RightAlignment
-)

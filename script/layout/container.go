@@ -58,3 +58,7 @@ func (b *ContainerBuilder) RowContainer() (any, error) {
 func (b *ContainerBuilder) Text(name, format string, args ...any) (any, error) {
 	return b.AddComponent(name, layout.NewText(format, args...))
 }
+
+func (b *ContainerBuilder) Value(name, label, format string, args ...any) (any, error) {
+	return b.AddComponent(name, layout.NewValue(label, format, args...))
+}
