@@ -1,7 +1,6 @@
 package layout
 
 import (
-	"fmt"
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
 	"image"
@@ -39,7 +38,6 @@ func (c *rowContainer) Layout(ctx draw2d.GraphicContext) bool {
 			dy := cb.Dy()
 			comp.SetBounds(image.Rect(c.insetX, y, bounds.Dx()-c.insetX, y+dy))
 			comp.Layout(gc)
-			fmt.Println(c.Type, comp.GetType(), comp.Bounds())
 			y = y + comp.Bounds().Dy()
 		}
 		bounds.Max.Y = bounds.Min.Y + y + c.insetMaxY
