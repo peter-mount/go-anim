@@ -103,6 +103,10 @@ func (c *BaseComponent) InsetBounds() image.Rectangle {
 	return image.Rect(c.bounds.Min.X+c.insetX, c.bounds.Min.Y+c.insetMinY, c.bounds.Max.X-c.insetX, c.bounds.Max.Y-c.insetMaxY)
 }
 
+func (c *BaseComponent) GetInsets() (int, int, int, int) {
+	return c.insetX, c.insetMinY, c.insetX, c.insetMaxY
+}
+
 func (c *BaseComponent) SetBounds(b image.Rectangle) {
 	c.bounds = b
 	c.updateRequired = true

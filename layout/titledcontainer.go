@@ -60,7 +60,7 @@ func (c *titledContainer) Layout(ctx draw2d.GraphicContext) bool {
 
 		_ = c.rowContainer.Layout(ctx)
 
-		c.SetBounds(c.rowContainer.BaseComponent.Bounds())
+		//c.SetBounds(c.rowContainer.BaseComponent.Bounds())
 	})
 	return true
 }
