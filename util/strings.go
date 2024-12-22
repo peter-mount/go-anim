@@ -3,9 +3,7 @@ package util
 import (
 	"fmt"
 	"github.com/llgcode/draw2d/draw2dimg"
-	"github.com/llgcode/draw2d/draw2dkit"
 	"image"
-	"image/color"
 	"math"
 	"strconv"
 	"strings"
@@ -160,7 +158,6 @@ func (a Alignment) Metrics(gc *draw2dimg.GraphicContext, bounds image.Rectangle,
 	mlw := int(m.MaxLineWidth)
 	lc := len(m.Lines)
 	x0, y0, x1 := bounds.Min.X, bounds.Min.Y, bounds.Max.X
-	cx := x0 + (bounds.Dx() >> 1)
 	maxY := bounds.Min.Y + (lc * int(m.MaxLineHeight))
 	switch a {
 	case LeftAlignment:
@@ -169,6 +166,7 @@ func (a Alignment) Metrics(gc *draw2dimg.GraphicContext, bounds image.Rectangle,
 
 	case CenterAlignment:
 		m.xFunc = m.centerX
+		cx := x0 + (bounds.Dx() >> 1)
 		lw := mlw >> 1
 		m.ContentBounds = image.Rect(cx-lw, y0, cx+lw, maxY)
 
@@ -195,11 +193,6 @@ func (m *AlignmentMetrics) rightX(i int) float64 { return float64(m.Bounds.Dx())
 
 // Fill fills the string defined in this AlignmentMetrics into the supplied GraphicContext
 func (m *AlignmentMetrics) Fill(gc *draw2dimg.GraphicContext) float64 {
-	gc.Save()
-	gc.SetStrokeColor(color.White)
-	gc.SetLineWidth(1.0)
-	draw2dkit.Rectangle(gc, float64(m.ContentBounds.Min.X), float64(m.ContentBounds.Min.Y), float64(m.ContentBounds.Max.X), float64(m.ContentBounds.Max.Y))
-	gc.Restore()
 	return m.paint(gc.FillStringAt)
 }
 
