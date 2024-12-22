@@ -42,7 +42,9 @@ type BaseComponent struct {
 	fill           color.Color
 	stroke         color.Color
 	lineWidth      float64
-	inset          int
+	insetX         int // Inset on x-axis
+	insetMinY      int // Inset on y-axis at the top, can differ to insetMaxY when dealing with titles
+	insetMaxY      int // Inset on y-axis at the bottom
 }
 
 func (c *BaseComponent) SetPainter(painter Painter) {
@@ -62,7 +64,9 @@ func (c *BaseComponent) GetType() string {
 }
 
 func (c *BaseComponent) Inset(inset int) {
-	c.inset = inset
+	c.insetX = inset
+	c.insetMinY = inset
+	c.insetMaxY = inset
 }
 
 func (c *BaseComponent) Stroke(col color.Color) {
@@ -96,7 +100,7 @@ func (c *BaseComponent) Bounds() image.Rectangle {
 }
 
 func (c *BaseComponent) InsetBounds() image.Rectangle {
-	return c.bounds.Inset(c.inset)
+	return image.Rect(c.bounds.Min.X+c.insetX, c.bounds.Min.Y+c.insetMinY, c.bounds.Max.X-c.insetX, c.bounds.Max.Y-c.insetMaxY)
 }
 
 func (c *BaseComponent) SetBounds(b image.Rectangle) {
@@ -128,7 +132,7 @@ func (c *BaseComponent) paint(gc *draw2dimg.GraphicContext, painter Painter) {
 		gc.Save()
 		defer gc.Restore()
 		//fmt.Printf("translate %q\t%d, %d\n", c.Type, c.bounds.Min.X+c.inset, c.bounds.Min.Y+c.inset)
-		gc.Translate(float64(c.bounds.Min.X+c.inset), float64(c.bounds.Min.Y+c.inset))
+		gc.Translate(float64(c.bounds.Min.X+c.insetX), float64(c.bounds.Min.Y+c.insetMinY))
 
 		if c.font != "" {
 			_ = graph.SetFont(gc, c.font)

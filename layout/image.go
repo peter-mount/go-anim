@@ -69,9 +69,9 @@ func (i *Image) paint(gc *draw2dimg.GraphicContext) {
 	ib := img.Bounds()
 
 	if !cb.Eq(ib) {
-		img = resize.Resize(uint(cb.Dx()-i.inset-i.inset), 0, img, resize.NearestNeighbor)
+		img = resize.Resize(uint(cb.Dx()-i.insetX-i.insetX), 0, img, resize.NearestNeighbor)
 		ib = img.Bounds()
-		cb.Max = cb.Min.Add(image.Pt(ib.Dx()+(i.inset<<1), ib.Dy()+(i.inset<<1)))
+		cb.Max = cb.Min.Add(image.Pt(ib.Dx()+(i.insetX<<1), ib.Dy()+i.insetMinY+i.insetMaxY))
 		i.SetBounds(cb)
 	}
 

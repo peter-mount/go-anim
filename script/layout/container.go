@@ -32,7 +32,10 @@ func (b *ContainerBuilder) AddComponent(name string, comp layout.Component) (any
 	return newComponentBuilder(b, b.builder, comp), nil
 }
 
-func (b *ContainerBuilder) addContainer(comp layout.Container) (any, error) {
+func (b *ContainerBuilder) AddContainer(name string, comp layout.Container) (any, error) {
+	if err := b.builder.add(name, comp); err != nil {
+		return nil, err
+	}
 	b.builder.seq++
 	comp.SetType(comp.GetType() + strconv.Itoa(b.builder.seq))
 	b.comp.Add(comp)
@@ -40,11 +43,11 @@ func (b *ContainerBuilder) addContainer(comp layout.Container) (any, error) {
 }
 
 func (b *ContainerBuilder) ColScaleContainer(scales ...float64) (any, error) {
-	return b.addContainer(layout.ColScaleContainer(scales...))
+	return b.AddContainer("", layout.ColScaleContainer(scales...))
 }
 
 func (b *ContainerBuilder) FixedContainer(width, height int) (any, error) {
-	return b.addContainer(layout.FixedContainer(image.Rect(0, 0, width, height)))
+	return b.AddContainer("", layout.FixedContainer(image.Rect(0, 0, width, height)))
 }
 
 func (b *ContainerBuilder) Image(name string) (any, error) {
@@ -52,11 +55,15 @@ func (b *ContainerBuilder) Image(name string) (any, error) {
 }
 
 func (b *ContainerBuilder) RowContainer() (any, error) {
-	return b.addContainer(layout.RowContainer())
+	return b.AddContainer("", layout.RowContainer())
 }
 
 func (b *ContainerBuilder) Text(name, format string, args ...any) (any, error) {
 	return b.AddComponent(name, layout.NewText(format, args...))
+}
+
+func (b *ContainerBuilder) TitledContainer(name, title string) (any, error) {
+	return b.AddContainer(name, layout.TitledContainer(title))
 }
 
 func (b *ContainerBuilder) Value(name, label, format string, args ...any) (any, error) {
