@@ -3,12 +3,14 @@ package graph
 import (
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
+	"github.com/peter-mount/go-anim/graph"
 	"github.com/peter-mount/go-anim/renderer"
 	"github.com/peter-mount/go-anim/script/image"
 	draw2d2 "github.com/peter-mount/go-anim/util/draw2d"
 	"github.com/peter-mount/go-anim/util/font"
 	"github.com/peter-mount/go-script/packages"
 	"image/color"
+	"image/draw"
 )
 
 func init() {
@@ -38,6 +40,10 @@ func (_ Graph) NewSizedContext(w, h int) renderer.Context {
 	return renderer.NewContext(w, h)
 }
 
+func (_ Graph) NewImageContext(img draw.Image) renderer.Context {
+	return renderer.NewImageContext(img)
+}
+
 func (_ Graph) NewFont(name string, size float64, family draw2d.FontFamily, style draw2d.FontStyle) font.Font {
 	return font.New(name, size, family, style)
 }
@@ -47,14 +53,7 @@ func (_ Graph) ParseFont(s string) (font.Font, error) {
 }
 
 func (_ Graph) SetFont(gc *draw2dimg.GraphicContext, s string) error {
-	f, err := font.ParseFont(s)
-	if err != nil {
-		return err
-	}
-
-	gc.SetFontData(f.FontData())
-	gc.SetFontSize(f.Size())
-	return nil
+	return graph.SetFont(gc, s)
 }
 
 func (_ Graph) FillPoly(gc *draw2dimg.GraphicContext, c color.Color, v ...float64) {
