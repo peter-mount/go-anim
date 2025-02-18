@@ -1,6 +1,7 @@
 package util
 
 import (
+	"github.com/llgcode/draw2d"
 	"image"
 	"math"
 	"strings"
@@ -47,6 +48,19 @@ func (r Rectangle) String() string {
 	}, ",")
 }
 
-func (r Rectangle) Rectangle() image.Rectangle {
+func (r Rectangle) Rect() image.Rectangle {
 	return image.Rect(int(r.X1), int(r.Y1), int(r.X2), int(r.Y2))
+}
+
+func (r Rectangle) AddPath(ctx draw2d.GraphicContext) {
+	ctx.MoveTo(r.X1, r.Y1)
+	ctx.LineTo(r.X2, r.Y1)
+	ctx.LineTo(r.X2, r.Y2)
+	ctx.LineTo(r.X1, r.Y2)
+	// Don't close as start might not be this rectangle
+	ctx.LineTo(r.X1, r.Y1)
+}
+
+func RectFromRect(rect image.Rectangle) Rectangle {
+	return Rect(float64(rect.Min.X), float64(rect.Min.Y), float64(rect.Max.X), float64(rect.Max.Y))
 }

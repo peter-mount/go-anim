@@ -72,3 +72,96 @@ func Expand(src image.Image, top, left, bottom, right int) Image {
 
 	return dstImage
 }
+
+// AutoCrop will crop an image removing anything that is black around the image.
+func AutoCrop(src image.Image) Image {
+	b := src.Bounds()
+
+	// Look for first line
+	for y := b.Min.Y; y <= b.Max.Y; y++ {
+		if !isBlackRow(src, y, b.Min.X, b.Max.X) {
+			b.Min.Y = y
+			break
+		}
+	}
+
+	// Look for last line
+	for y := b.Max.Y; y >= b.Min.Y; y-- {
+		if !isBlackRow(src, y, b.Min.X, b.Max.X) {
+			b.Max.Y = y
+			break
+		}
+	}
+
+	// First column
+	for x := b.Min.X; x <= b.Max.X; x++ {
+		if !isBlackCol(src, x, b.Min.Y, b.Max.Y) {
+			b.Min.X = x
+			break
+		}
+	}
+
+	// Last column
+	for x := b.Max.X; x > b.Min.X; x-- {
+		if !isBlackCol(src, x, b.Min.Y, b.Max.Y) {
+			b.Max.X = x
+			break
+		}
+	}
+
+	if b.Dx() > 0 && b.Dy() > 0 {
+		return Crop(src, b)
+	}
+
+	// Nothing to crop so return a duplicate but writable image
+	return DuplicateImage(src)
+}
+
+func IsBlack(c color.Color) bool {
+	return !IsNotBlack(c)
+}
+
+func IsNotBlack(c color.Color) bool {
+	r1, g1, b1, a1 := c.RGBA()
+	return a1 == 0 || (r1 != 0 && g1 != 0 && b1 != 0)
+}
+
+func isBlackRow(src image.Image, y, x0, x1 int) bool {
+	for x := x0; x <= x1; x++ {
+		if IsNotBlack(src.At(x, y)) {
+			return false
+		}
+	}
+	return true
+}
+
+func isBlackCol(src image.Image, x, y0, y1 int) bool {
+	for y := y0; y <= y1; y++ {
+		if IsNotBlack(src.At(x, y)) {
+			return false
+		}
+	}
+	return true
+}
+
+func Mask(img, mask image.Image) (Image, error) {
+	return Of(func(x, y int, col color.Color) (color.Color, error) {
+		if IsNotBlack(mask.At(x, y)) {
+			return col, nil
+		}
+		return color.Black, nil
+	}).
+		DoNew(img)
+}
+
+// DrawMask draws img over dest using mask to select which pixels in img are to be
+// copied over. This returns a new image
+func DrawMask(img, mask, dest image.Image) (Image, error) {
+	return Of(func(x, y int, col color.Color) (color.Color, error) {
+		if IsNotBlack(mask.At(x, y)) {
+			return img.At(x, y), nil
+		}
+		return col, nil
+	}).
+		DoNew(dest)
+}
